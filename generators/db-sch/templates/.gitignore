@@ -1,0 +1,5 @@
+.yo-rc.json
+node_modules/
+mta_archives/
+*.swp
+package-lock.json

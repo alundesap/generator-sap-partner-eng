@@ -1,0 +1,62 @@
+ID: hcsp
+_schema-version: '2.1'
+description: HANA Cloud Sample App using the schema plan.
+version: 0.0.1
+
+modules:
+
+### New Modules Here ###
+
+# cf push hcsp-pyt -p python -n a-team-dbaas-dev-hcsp-pyt -k 512M -m 256M
+ - name: hcsp-pyt
+   type: python
+   path: python
+   parameters:
+      memory: 256M
+      disk-quota: 512M
+      #host: hcsp-pyt-${space}
+      #domain: yourdomain.com
+   provides:
+    - name: hcsp_pyt_api
+      properties:
+         url: ${default-url}
+   requires:
+    - name: hcsp-uaa
+    - name: hcsp-sch
+
+ - name: hcsp-web
+   type: html5
+   path: web
+   parameters:
+      disk-quota: 256M
+      memory: 256M
+   requires:
+    - name: hcsp-uaa
+   ### New Destinations Here ###
+    - name: hcsp_pyt_api
+      group: destinations
+      properties:
+         name: hcsp_pyt_be
+         url: ~{url}
+         forwardAuthToken: true
+
+resources:
+
+### New Resources Here ###
+
+ - name: hcsp-sch
+   type: com.sap.xs.hana-schema
+   parameters:
+      service-name: HCSP_SCH
+      config:
+         database_id: <hana_cloud_guid>
+         schema: HCSP_DB
+
+ - name: hcsp-uaa
+   parameters:
+      path: ./xs-security.json
+      service-plan: application
+      service: xsuaa
+      service-name: HCSP_UAA
+   type: org.cloudfoundry.managed-service
+
