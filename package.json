@@ -1,12 +1,12 @@
 {
   "name": "generator-sap-partner-eng",
-  "version": "0.1.00",
-  "description": "Project Generator for SAP Partner Engineering Guided Projects",
-  "homepage": "https://github.com/alundesap/generator-sap-partner-eng",
+  "version": "0.1.02",
+  "description": "Project/Module Generator for SAP Partner Engineering Guided Projects",
+  "homepage": "https://github.com/andrewlunde/generator-sap-partner-eng",
   "author": {
     "name": "Andrew Lunde",
     "email": "andrew.lunde@sap.com",
-    "url": "https://github.com/alundesap"
+    "url": "https://github.com/andrewlunde"
   },
   "files": [
     "generators"
@@ -15,18 +15,25 @@
   "keywords": [
     "yeoman-generator",
     "generator-sap-partner-eng",
+    "generator-sap-partner-engineering",
     "generator-partner-eng",
+    "generator-partner-engineering",
     "generator-sap",
     "generator",
     "sap",
     "partner-eng",
+    "partner-engineering",
     "sap-partner-eng",
+    "sap-partner-engineering",
     "partner",
     "partner-edge",
     "guided",
+    "partner-guided",
+    "partner-eng-guided",
     "naïve-sherpa",
-    "partner-eng",
     "cloudplatform",
+    "cap",
+    "cloud-application-programming",
     "hana"
   ],
   "devDependencies": {
@@ -89,7 +96,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/alundesap/generator-sap-partner-eng"
+    "url": "https://github.com/andrewlunde/generator-sap-partner-eng"
   },
   "license": "MIT"
 }
