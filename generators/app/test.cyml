@@ -1,0 +1,31 @@
+xxcommm-001-000: ^^ Generated mta.yaml based on yo sap-partner-eng version 0.1.02
+xxcommm-002-000: ^^ appName = conciletime
+_schema-version: '3.1'
+ID: conciletime
+version: 0.0.1
+description: ConcileTime
+parameters:
+  enable-parallel-deployments: true  
+xxcommm-002-019: ^ Inline comment
+build-parameters: # Inline comment
+  before-all:
+     builder: custom
+     commands:
+        npm install
+        npx cds build
+xxcommm-003-000:
+modules:
+   xxcommm-004:
+   xxcommm-005-000: ^^^ New Modules Here ^^^
+   xxcommm-006-000:
+   xxcommm-007-000: ^ cf push conciletime-app -p app -n conciletime-app -d conciletime.com -k 256M -m 256M
+   name: conciletime-app
+   type: html5
+   path: app
+   build-parameters:
+      ignore: ["node_modules/"]
+   parameters:
+      host: conciletime-app-${space}
+      domain: conciletime.com
+      xxcommm-008-006: ^routes:
+      xxcommm-009-006: ^  - route: conciletime-app-${space}-${app-name}.${default-domain}

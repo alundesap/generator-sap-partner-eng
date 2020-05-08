@@ -54,6 +54,7 @@
   "dependencies": {
     "yeoman-generator": "^4.5.0",
     "chalk": "^3.0.0",
+    "yawn-yaml": "^1.5",
     "yosay": "^2.0.2"
   },
   "jest": {

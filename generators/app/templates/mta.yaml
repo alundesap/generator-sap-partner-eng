@@ -1,19 +1,44 @@
+## Generated mta.yaml based on yo sap-partner-eng version 0.1.02
+## appName = <%= app_name %>
+## language=nodejs; multiTenant=false
+## approuter=<%= router_name %>
+_schema-version: '3.1'
 ID: <%= app_name %>
-_schema-version: '2.1'
-description: <%= app_desc %>
 version: 0.0.1
+description: <%= app_desc %>
+parameters:
+  enable-parallel-deployments: true  
+build-parameters:
+  before-all:
+   - builder: custom
+     commands:
+      - npm install
+      - npx cds build
 
 modules:
 
 ### New Modules Here ###
 
+# cf push <%= router_name %> -p <%= router_dir %> -n <%= router_name %> -d <%= domain_name %> -k 256M -m 256M
  - name: <%= router_name %>
    type: html5
    path: <%= router_dir %>
+   build-parameters:
+      ignore: ["node_modules/"]
    parameters:
+      host: <%= router_name %>-${space}
+      domain: <%= domain_name %>
+      #routes:
+      #  - route: <%= router_name %>-${space}-${app-name}.${default-domain}
       disk-quota: 256M
       memory: 256M
+   provides:
+    - name: Router_api
+      properties:
+         url: ${default-url}
+         application: ${app-name}
    requires:
+   # cf bind-service <%= router_name %> <%= uaa_svc_name %>
     - name: <%= uaa_res_name %>
    ### New Destinations Here ###
 
@@ -21,10 +46,35 @@ resources:
 
 ### New Resources Here ###
 
+# cf create-service xsuaa application <%= uaa_svc_name %> -c ./xs-security.json
  - name: <%= uaa_res_name %>
+   requires:
+    - name: Router_api
+   properties:
+      XSAPPNAME: ${xsuaa-app}
    parameters:
       path: ./xs-security.json
       service-plan: application
       service: xsuaa
       service-name: <%= uaa_svc_name %>
+      xsuaa-app: ${space}-~{Router_api/application}
+      config:
+         xsappname: ${xsuaa-app}
    type: org.cloudfoundry.managed-service
+
+# - name: MTAppRegistry
+#   type: org.cloudfoundry.managed-service
+#   requires:
+#    - name: MTAppUAA
+#   parameters:
+#    service: saas-registry
+#    service-plan: application
+#    service-name: MTAppRegistry
+#    config:
+#      xsappname: ~{MTAppUAA/XSAPPNAME}
+#      appName: MTApp
+#      displayName: MTApp
+#      description: 'Multitenant&nbspBusiness&nbspApp&nbspbased&nbspon&nbspNode.js'
+#      category: 'Digital&nbspPartner&nbspEngineering'
+#      appUrls:
+#        onSubscription:  https://${org}-${space}-mtappbackend.${default-domain}/callback/v1.0/tenants/{tenantId}

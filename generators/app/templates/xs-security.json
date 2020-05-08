@@ -1,7 +1,7 @@
 {
   "xsappname": "<%= app_name %>",
   "tenant-mode": "dedicated",
-  "description": "Security profile of called application",
+  "description": "Security profile of the <%= app_name %> application",
   "scopes": [
     {
       "name": "uaa.user",

@@ -14,6 +14,42 @@ const yosay = require("yosay");
 const path = require("path");
 const mkdirp = require("mkdirp");
 
+const exec = require("child_process").execSync;
+
+function get_domains() {
+
+  var retarry = [];
+
+  // retarry.push('domain.com');
+ 
+  var result = exec('cf domains');
+  var output = result.toString("utf8");
+
+    var lines = String(output).split("\n");
+    var line = "";
+    var first = true;
+    for (var i = 1; i <= lines.length; i++) {
+      line = lines[i - 1];
+      //console.log(`line: ${line}`);
+      var words = String(line.replace(/\s+/g, ' ')).split(" ");
+      if ((words[1] == 'shared') || (words[1] == 'owned')) {
+       if (first) {
+        // console.log('domain: ' + words[0]);
+        retarry.push(words[0]);
+        first = false;
+      }
+      else {
+       if (words[1] == 'owned') {
+         //console.log('domain: ' + words[0]);
+         retarry.push(words[0]);
+        }
+      }
+    }
+  }
+  return retarry;
+}
+
+
 // function makeProjectName(name) {
 //   name = _.kebabCase(name);
 //   return name;
@@ -23,10 +59,23 @@ function suggest_router_name(so_far) {
   //return JSON.stringify(so_far);
   var retstr = "";
 
-  retstr += so_far.app_name + "-web";
+  retstr += so_far.app_name + "-app";
 
   return retstr;
 }
+
+function suggest_domain_name(so_far) {
+  //return JSON.stringify(so_far);
+  var retstr = "";
+
+  var domains = get_domains();
+
+  retstr += domains[0];
+  ;
+
+  return retstr;
+}
+
 
 function suggest_uaa_res_name(so_far) {
   //return JSON.stringify(so_far);
@@ -54,8 +103,10 @@ module.exports = class extends Generator {
       project_name: this.appname,
       app_name: "app",
       app_desc: "App Description",
-      router_name: "web",
-      router_dir: "web",
+      router_name: "app",
+      router_dir: "app",
+      database_dir: "db",
+      services_dir: "srv",
       uaa_res_name: "app-uaa",
       uaa_svc_name: "APP_UAA"
     });
@@ -64,7 +115,7 @@ module.exports = class extends Generator {
   async prompting() {
     // Have Yeoman greet the user.
     this.log(
-      yosay(`Welcome to the awesome ${chalk.red("SAP A-Team MTA")} generator!`)
+      yosay(`Welcome to the ${chalk.red("SAP\nPartner Engineering")} project generator!`)
     );
 
     this.log(
@@ -130,10 +181,30 @@ module.exports = class extends Generator {
         default: suggest_router_name
       },
       {
+        type: "list",
+        name: "domain_name",
+        message: "Domain name.",
+        // choices: ["cfapps.us10.hana.ondemand.com","conciletime.com"],
+        choices: get_domains(),
+        default: suggest_domain_name
+      },
+      {
         type: "input",
         name: "router_dir",
         message: "Application router path",
         default: this.config.get("router_dir")
+      },
+      {
+        type: "input",
+        name: "database_dir",
+        message: "Database model path",
+        default: this.config.get("database_dir")
+      },
+      {
+        type: "input",
+        name: "services_dir",
+        message: "Services definition path",
+        default: this.config.get("services_dir")
       },
       {
         type: "input",
@@ -166,7 +237,10 @@ module.exports = class extends Generator {
     this.config.set("app_desc", this.answers.app_desc);
 
     this.config.set("router_name", this.answers.router_name);
+    this.config.set("domain_name", this.answers.domain_name);
     this.config.set("router_dir", this.answers.router_dir);
+    this.config.set("database_dir", this.answers.database_dir);
+    this.config.set("services_dir", this.answers.services_dir);
 
     this.config.set("uaa_res_name", this.answers.uaa_res_name);
     this.config.set("uaa_svc_name", this.answers.uaa_svc_name);
@@ -180,7 +254,10 @@ module.exports = class extends Generator {
       app_name: this.answers.app_name,
       app_desc: this.answers.app_desc,
       router_name: this.answers.router_name,
+      domain_name: this.answers.domain_name,
       router_dir: this.answers.router_dir,
+      database_dir: this.answers.database_dir,
+      services_dir: this.answers.services_dir,
       uaa_res_name: this.answers.uaa_res_name,
       uaa_svc_name: this.answers.uaa_svc_name
     };
@@ -196,6 +273,37 @@ module.exports = class extends Generator {
     //  this.destinationPath(".gitignore")
     //);
 
+    this.fs.copy(
+      this.templatePath(".cdsrc.json"),
+      this.destinationPath(".cdsrc.json")
+    );
+
+    this.fs.copy(
+      this.templatePath(".gitignore"),
+      this.destinationPath(".gitignore")
+    );
+
+    this.fs.copy(
+      this.templatePath(".eslintrc"),
+      this.destinationPath(".eslintrc")
+    );
+
+    this.fs.copy(
+      this.templatePath(".eslintrc"),
+      this.destinationPath(".eslintrc")
+    );
+
+    this.fs.copy(
+      this.templatePath(".vscode/*"),
+      this.destinationPath(".vscode")
+    );
+
+    this.fs.copyTpl(
+      this.templatePath("package.json"),
+      this.destinationPath("package.json"),
+      subs
+    );
+
     this.fs.copyTpl(
       this.templatePath("mta.yaml"),
       this.destinationPath("mta.yaml"),
@@ -203,21 +311,31 @@ module.exports = class extends Generator {
     );
 
     this.fs.copy(
-      this.templatePath("web/package.json"),
+      this.templatePath("app/package.json"),
       this.destinationPath(this.answers.router_dir + "/package.json")
     );
     this.fs.copy(
-      this.templatePath("web/xs-app.json"),
+      this.templatePath("app/xs-app.json"),
       this.destinationPath(this.answers.router_dir + "/xs-app.json")
     );
     this.fs.copyTpl(
-      this.templatePath("web/resources/index.html"),
+      this.templatePath("app/resources/index.html"),
       this.destinationPath(this.answers.router_dir + "/resources/index.html"),
       subs
     );
 
     this.fs.copy(
-      this.templatePath("web/resources/favicon.ico"),
+      this.templatePath("db/README.md"),
+      this.destinationPath(this.answers.database_dir + "/README.md")
+    );
+
+    this.fs.copy(
+      this.templatePath("srv/README.md"),
+      this.destinationPath(this.answers.services_dir + "/README.md")
+    );
+
+    this.fs.copy(
+      this.templatePath("app/resources/favicon.ico"),
       this.destinationPath(this.answers.router_dir + "/resources/favicon.ico")
     );
 
@@ -254,5 +372,6 @@ module.exports = class extends Generator {
     this.log(`Build+Deploy : "cd ${this.answers.project_name} ; mkdir -p mta_archives ; mbt build -p=cf -t=mta_archives --mtar=${this.answers.project_name}.mtar ; cf deploy mta_archives/${this.answers.project_name}.mtar -f"`);
     this.log(`UnDeploy : "cf undeploy ${this.answers.app_name} -f --delete-services"`);
     this.log(`Change into it with "cd ${this.answers.project_name}"`);
+    this.log(JSON.stringify(get_domains()));
   }
 };
