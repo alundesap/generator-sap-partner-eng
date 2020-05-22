@@ -1,6 +1,6 @@
 {
   "name": "generator-sap-partner-eng",
-  "version": "0.1.03",
+  "version": "0.1.04",
   "description": "Project/Module Generator for SAP Partner Engineering Guided Projects",
   "homepage": "https://github.com/andrewlunde/generator-sap-partner-eng",
   "author": {
@@ -52,8 +52,10 @@
     "npm": ">= 4.0.0"
   },
   "dependencies": {
+    "pkginfo": "0.4.1",
     "yeoman-generator": "^4.5.0",
     "chalk": "^3.0.0",
+    "dependency-graph": "^0.9",
     "yawn-yaml": "^1.5",
     "yosay": "^2.0.2"
   },

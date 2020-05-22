@@ -9,9 +9,6 @@
     "express": "^4.17.1",
     "hdb": "^0.17.1"
   },
-  "engines": {
-    "node": "^12.14"
-  },
   "scripts": {
     "build": "cds build/all --clean",
     "deploy": "cds deploy",

@@ -1,3 +1,7 @@
+// Debug by launching like this.
+// npx --node-arg=--inspect yo sap-partner-eng
+// Then run the "Yo Partner-Eng" run profile
+//
 /* eslint-disable prettier/prettier */
 /* eslint-disable no-undef */
 /* eslint-disable no-redeclare */
@@ -120,18 +124,19 @@ module.exports = class extends Generator {
 
     this.log(
       `After you've generated your base MTA project you can enhance it with the following subgenerators.`
+      +`\n npx --node-arg=--inspect yo sap-partner-eng:subgen`
     );
     this.log(``);
-    this.log(`Add Jenkins support with           "yo sap-partner-eng:jenkins"`);
-    this.log(`Add Deploy to XSA extension with   "yo sap-partner-eng:deploy2xsa"`);
-    this.log(`Add a Manually managed schema with "yo sap-partner-eng:db-sch"`);
-    this.log(`Add a HDB-style HDI container with "yo sap-partner-eng:db-hdb"`);
+    this.log(`Add Jenkins support with           "?yo sap-partner-eng:jenkins"`);
+    this.log(`Add Deploy to XSA extension with   "?yo sap-partner-eng:deploy2xsa"`);
+    this.log(`Add a Manually managed schema with "?yo sap-partner-eng:db-sch"`);
+    this.log(`Add a HDB-style HDI container with "?yo sap-partner-eng:db-hdb"`);
     this.log(`Add a CAP-style HDI container with "yo sap-partner-eng:db-cap"`);
-    this.log(`Add a HANA SecureStore with        "yo sap-partner-eng:db-ss"`);
+    this.log(`Add a HANA SecureStore with        "?yo sap-partner-eng:db-ss"`);
     this.log(`Add a NodeJS based module with     "yo sap-partner-eng:module-nodejs"`);
-    this.log(`Add a Java based module with       "yo sap-partner-eng:module-java"`);
-    this.log(`Add a Python based module with     "yo sap-partner-eng:module-python"`);
-    this.log(`Add a Docker based module with     "yo sap-partner-eng:module-docker"`);
+    this.log(`Add a Java based module with       "?yo sap-partner-eng:module-java"`);
+    this.log(`Add a Python based module with     "?yo sap-partner-eng:module-python"`);
+    this.log(`Add a Docker based module with     "?yo sap-partner-eng:module-docker"`);
     this.log(``);
     this.log(
       `* = This module is not yet available or is in developoment.  YMMV.`
@@ -165,7 +170,8 @@ module.exports = class extends Generator {
       {
         type: "input",
         name: "app_name",
-        message: "Enter your project application name.",
+        // prefix: "The value here will be used as a suggetion.\n",
+        message: "Enter your project application name (will be used for defaults).",
         default: this.config.get("app_name") // Default to current folder name
       },
       {
@@ -177,12 +183,13 @@ module.exports = class extends Generator {
       {
         type: "input",
         name: "router_name",
-        message: "Application router name.",
+        message: "Application router internal module name.",
         default: suggest_router_name
       },
       {
         type: "list",
         name: "domain_name",
+        prefix: "This list of domain names is based on the current 'cf domains' command.\n",
         message: "Domain name.",
         // choices: ["cfapps.us10.hana.ondemand.com","conciletime.com"],
         choices: get_domains(),
@@ -197,7 +204,7 @@ module.exports = class extends Generator {
       {
         type: "input",
         name: "database_dir",
-        message: "Database model path",
+        message: "Domain/Database model path",
         default: this.config.get("database_dir")
       },
       {
@@ -232,6 +239,10 @@ module.exports = class extends Generator {
   }
 
   writing() {
+    var pkginfo = require('pkginfo')(module);
+
+    this.config.set("package_version", module.exports.version);
+
     this.config.set("project_name", this.answers.project_name);
     this.config.set("app_name", this.answers.app_name);
     this.config.set("app_desc", this.answers.app_desc);
@@ -249,7 +260,9 @@ module.exports = class extends Generator {
 
     // this.fs.copy(this.templatePath('gitignore'), this.destinationPath('.gitignore'));
 
+
     var subs = {
+      package_version: module.exports.version,
       project_name: this.answers.project_name,
       app_name: this.answers.app_name,
       app_desc: this.answers.app_desc,
@@ -281,11 +294,6 @@ module.exports = class extends Generator {
     this.fs.copy(
       this.templatePath(".gitignore"),
       this.destinationPath(".gitignore")
-    );
-
-    this.fs.copy(
-      this.templatePath(".eslintrc"),
-      this.destinationPath(".eslintrc")
     );
 
     this.fs.copy(
@@ -339,11 +347,13 @@ module.exports = class extends Generator {
       this.destinationPath(this.answers.router_dir + "/resources/favicon.ico")
     );
 
-    this.fs.copyTpl(
-      this.templatePath("xs-security.json"),
-      this.destinationPath("xs-security.json"),
-      subs
-    );
+    // Now xs-security is embodied in the mta.yaml file freeing this up for cds-security.json
+    // this.fs.copyTpl(
+    //   this.templatePath("xs-security.json"),
+    //   this.destinationPath("xs-security.json"),
+    //   subs
+    // );
+
   }
 
   install() {
@@ -352,16 +362,16 @@ module.exports = class extends Generator {
 
   end() {
     this.log(``);
-    this.log(`Add Jenkins support with           "yo sap-partner-eng:jenkins"`);
-    this.log(`Add Deploy to XSA extension with   "yo sap-partner-eng:deploy2xsa"`);
-    this.log(`Add a Manually managed schema with "yo sap-partner-eng:db-sch"`);
-    this.log(`Add a HDB-style HDI container with "yo sap-partner-eng:db-hdb"`);
+    this.log(`Add Jenkins support with           "?yo sap-partner-eng:jenkins"`);
+    this.log(`Add Deploy to XSA extension with   "?yo sap-partner-eng:deploy2xsa"`);
+    this.log(`Add a Manually managed schema with "?yo sap-partner-eng:db-sch"`);
+    this.log(`Add a HDB-style HDI container with "?yo sap-partner-eng:db-hdb"`);
     this.log(`Add a CAP-style HDI container with "yo sap-partner-eng:db-cap"`);
-    this.log(`Add a HANA SecureStore with        "yo sap-partner-eng:db-ss"`);
+    this.log(`Add a HANA SecureStore with        "?yo sap-partner-eng:db-ss"`);
     this.log(`Add a NodeJS based module with     "yo sap-partner-eng:module-nodejs"`);
-    this.log(`Add a Java based module with       "yo sap-partner-eng:module-java"`);
-    this.log(`Add a Python based module with     "yo sap-partner-eng:module-python"`);
-    this.log(`Add a Docker based module with     "yo sap-partner-eng:module-docker"`);
+    this.log(`Add a Java based module with       "?yo sap-partner-eng:module-java"`);
+    this.log(`Add a Python based module with     "?yo sap-partner-eng:module-python"`);
+    this.log(`Add a Docker based module with     "?yo sap-partner-eng:module-docker"`);
     this.log(``);
     this.log(
       `* = This module is not yet available or is in developoment.  YMMV.`

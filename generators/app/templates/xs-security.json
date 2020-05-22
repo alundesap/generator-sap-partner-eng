@@ -14,5 +14,11 @@
       "description": "UAA",
       "scope-references": ["uaa.user"]
     }
-  ]
+  ],
+	"oauth2-configuration": {   
+		"redirect-uris":
+		[
+			"http*://*.<%= domain_name %>/**"
+		]   
+	}
 }

@@ -153,6 +153,11 @@ module.exports = class extends Generator {
       this.answers.router_dir = this.config.get("router_dir");
     }
 
+    if (typeof this.config.get("domain_name") !== "undefined") {
+      this.answers.domain_name = this.config.get("domain_name");
+      this.log("Using domain_name: " + this.answers.domain_name);
+    }
+
     if (typeof this.config.get("uaa_res_name") !== "undefined") {
       this.answers.uaa_res_name = this.config.get("uaa_res_name");
       this.log("Using uaa_res_name: " + this.answers.uaa_res_name);
@@ -186,20 +191,23 @@ module.exports = class extends Generator {
       srv_api: this.answers.srv_api,
       srv_be: this.answers.srv_be,
       srv_route: this.answers.srv_route,
+      domain_name: this.answers.domain_name,
       uaa_res_name: this.answers.uaa_res_name
     };
 
-    this.fs.copyTpl(
-      this.templatePath(".cdsrc.json"),
-      this.destinationPath(".cdsrc.json"),
-      subs
-    );
+    // .cdsrc.json and package.json are being
+    // provided by the main app generator now
+    // this.fs.copyTpl(
+    //   this.templatePath(".cdsrc.json"),
+    //   this.destinationPath(".cdsrc.json"),
+    //   subs
+    // );
 
-    this.fs.copyTpl(
-      this.templatePath("package.json"),
-      this.destinationPath("package.json"),
-      subs
-    );
+    // this.fs.copyTpl(
+    //   this.templatePath("package.json"),
+    //   this.destinationPath("package.json"),
+    //   subs
+    // );
 
     this.fs.copyTpl(
       this.templatePath("db/.build.js"),
@@ -247,8 +255,44 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
+      this.templatePath("srv/cat-service-auth.cds"),
+      this.destinationPath(this.answers.srv_dir + "/cat-service-auth.cds"),
+      subs
+    );
+
+    this.fs.copyTpl(
       this.templatePath("srv/package.json"),
       this.destinationPath(this.answers.srv_dir + "/package.json"),
+      subs
+    );
+
+    this.fs.copyTpl(
+      this.templatePath("srv/CDS-MTX.md"),
+      this.destinationPath(this.answers.srv_dir + "/CDS-MTX.md"),
+      subs
+    );
+
+    this.fs.copyTpl(
+      this.templatePath("srv/server.js"),
+      this.destinationPath(this.answers.srv_dir + "/server.js"),
+      subs
+    );
+
+    this.fs.copyTpl(
+      this.templatePath("srv/provisioning.js_disabled"),
+      this.destinationPath(this.answers.srv_dir + "/provisioning.js_disabled"),
+      subs
+    );
+
+    this.fs.copyTpl(
+      this.templatePath("srv/package.json"),
+      this.destinationPath(this.answers.srv_dir + "/package.json"),
+      subs
+    );
+
+    this.fs.copyTpl(
+      this.templatePath("cds-security.json"),
+      this.destinationPath("cds-security.json"),
       subs
     );
 
@@ -277,9 +321,12 @@ module.exports = class extends Generator {
 
               var ins = "";
               ins += "\n\n";
+              ins += indent + "# cf push <?= db_name ?> -p <?= db_dir ?> -k 512M -m 512M" + "\n";
               ins += indent + " - name: <?= db_name ?>" + "\n";
               ins += indent + "   type: hdb" + "\n";
               ins += indent + "   path: <?= db_dir ?>" + "\n";
+              ins += indent + "   build-parameters:" + "\n";
+              ins += indent + "      ignore: [\"node_modules/\"]" + "\n";
               ins += indent + "   parameters:" + "\n";
               ins += indent + "      memory: 512M" + "\n";
               ins += indent + "      disk-quota: 512M" + "\n";
@@ -287,13 +334,17 @@ module.exports = class extends Generator {
               ins += indent + "    - name: <?= hdi_res_name ?>";
 
               ins += "\n\n";
+              ins += indent + "# cf push <?= srv_name ?> -p <?= srv_dir ?> -n <?= srv_name ?> -d <?= domain_name ?> -k 512M -m 512M" + "\n";
               ins += indent + " - name: <?= srv_name ?>" + "\n";
               ins += indent + "   type: nodejs" + "\n";
+              ins += indent + "   build-parameters:" + "\n";
+              ins += indent + "      ignore: [\"node_modules/\"]" + "\n";
               ins += indent + "   path: <?= srv_dir ?>" + "\n";
               ins += indent + "   parameters:" + "\n";
               ins += indent + "      memory: 512M" + "\n";
               ins += indent + "      disk-quota: 512M" + "\n";
-
+              ins += indent + "      host: <?= srv_name ?>-${space}" + "\n";
+              ins += indent + "      domain: <?= domain_name ?>" + "\n";
               ins += indent + "   provides:" + "\n";
               ins += indent + "    - name: <?= srv_api ?>" + "\n";
               ins += indent + "      properties:" + "\n";
@@ -302,6 +353,9 @@ module.exports = class extends Generator {
               ins += indent + "   requires:" + "\n";
               ins += indent + "    - name: <?= hdi_res_name ?>" + "\n";
               ins += indent + "    - name: <?= uaa_res_name ?>" + "\n";
+              ins += indent + "   # CDS-MTX" + "\n";
+              ins += indent + "    - name: <?= app_name ?>-reg" + "\n";
+              ins += indent + "    - name: <?= app_name ?>-mgd" + "\n";
 
               line += ins;
             }
@@ -317,6 +371,8 @@ module.exports = class extends Generator {
               var ins = "";
               ins += "\n\n";
 
+              //# cf create-service xsuaa application YO_UAA -c ./xs-security.json
+              ins += indent + "# cf create-service hana hdi-shared <?= hdi_svc_name ?> -c '{\"config\":{\"schema\":\"<?= db_schema_name ?>\"}}'" + "\n";
               ins += indent + " - name: <?= hdi_res_name ?>" + "\n";
               ins += indent + "   type: com.sap.xs.hdi-container" + "\n";
               ins += indent + "   parameters:" + "\n";

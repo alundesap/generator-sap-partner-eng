@@ -14,5 +14,16 @@
     "router_dir": "web",
     "uaa_res_name": "app-uaa",
     "uaa_svc_name": "APP_UAA"
+  },
+  "generator-sap-partner-eng": {
+    "project_name": "generator sap partner eng",
+    "app_name": "app",
+    "app_desc": "App Description",
+    "router_name": "app",
+    "router_dir": "app",
+    "database_dir": "db",
+    "services_dir": "srv",
+    "uaa_res_name": "app-uaa",
+    "uaa_svc_name": "APP_UAA"
   }
 }
