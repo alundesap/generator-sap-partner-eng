@@ -125,6 +125,7 @@ module.exports = class extends Generator {
       module_api: suggested_api,
       module_be: suggested_be,
       module_route: suggested_route,
+      multitenant_enabled: false,
       router_dir: "web"
     });
    
@@ -396,6 +397,23 @@ module.exports = class extends Generator {
 
     });
 
+    prompts.push({
+      type: "confirm",
+      name: "multitenant_enabled",
+      message: "Use this NodeJS module to handle multitenant subscription requests?",
+      when: function () {
+        var retval = false;
+        var enabled = globConfig.get("multitenant_enabled");
+        if (enabled) {
+          retval = false;
+        }
+        else {
+          retval = true;
+        }
+        return retval;
+      }
+    });
+
     this.answers = await this.prompt(prompts);
 
     if (typeof this.config.get("app_name") !== "undefined") {
@@ -459,6 +477,14 @@ module.exports = class extends Generator {
     //this.config.set("module_be", this.answers.module_be);
     //this.config.set("module_route", this.answers.module_route);
     //this.config.set("router_dir", this.answers.router_dir);
+
+    if (typeof this.answers.multitenant_enabled !== "undefined") {
+      this.config.set("multitenant_enabled", this.answers.multitenant_enabled);
+
+      if (this.answers.multitenant_enabled) {
+        this.config.set("multitenant_module", this.answers.module_name);
+      }
+    }
 
     this.config.save();
 
