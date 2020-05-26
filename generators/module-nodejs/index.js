@@ -126,7 +126,10 @@ module.exports = class extends Generator {
       module_be: suggested_be,
       module_route: suggested_route,
       multitenant_enabled: false,
-      router_dir: "web"
+      reg_res_name: the_app_name + "-reg",
+      reg_svc_name: the_app_name.toUpperCase() + "_REG",
+      router_name: the_app_name + "-app",
+      router_dir: "app"
     });
    
     globConfig = this.config;
@@ -156,6 +159,18 @@ module.exports = class extends Generator {
     } else {
       this.answers.app_name = this.config.get("app_name");
       this.log("Using app_name: " + this.answers.app_name);
+    }
+
+    if (typeof this.config.get("router_name") === "undefined") {
+      prompts.push({
+        type: "input",
+        name: "router_name",
+        message: "Application router path",
+        default: this.config.get("router_name")
+      });
+    } else {
+      this.answers.router_name = this.config.get("router_name");
+      this.log("Using router_name: " + this.answers.router_name);
     }
 
     if (typeof this.config.get("router_dir") === "undefined") {
@@ -401,23 +416,142 @@ module.exports = class extends Generator {
       type: "confirm",
       name: "multitenant_enabled",
       message: "Use this NodeJS module to handle multitenant subscription requests?",
-      when: function () {
+      default: this.config.get("multitenant_enabled")
+      // when: function () {
+      //   var retval = false;
+      //   var enabled = globConfig.get("multitenant_enabled");
+      //   if (enabled) {
+      //     retval = false;
+      //   }
+      //   else {
+      //     retval = true;
+      //   }
+      //   return retval;
+      // }
+    });
+
+    prompts.push({
+      type: "input",
+      name: "reg_res_name",
+      message: "Registry Resource Name.",
+      default: this.config.get("reg_res_name"),
+      // validate: function (input) {
+      //   // Declare function as asynchronous, and save the done callback
+      //   var done = this.async();
+    
+      //   // Do async stuff
+      //   setTimeout(function() {
+          
+      //     var names = globConfig.get("module_names");
+      //     var typeModName = typeof names;
+
+      //     if (typeModName === "undefined") {
+      //       done(null, true);
+      //     }
+      //     else if (input === globConfig.get("app_name")) {
+      //       done('Already used as application name');
+      //       return;
+      //     }
+      //     else if (input === globConfig.get("router_name")) {
+      //       done('Already used as approuter name');
+      //       return;
+      //     }
+      //     else if (input === globConfig.get("router_dir")) {
+      //       done('Already used as approuter path');
+      //       return;
+      //     }
+      //     else if (typeModName === "object") {
+      //       for( var i = 0; i < names.length; i++) {
+      //         var existing_name = names[i];
+      //         if (input == existing_name) {
+      //           done('Already used');
+      //           return;
+      //         }
+      //       }
+      //     }
+      //    // Pass the return value in the done callback
+      //     done(null, true);
+      //   }, 500);
+      // },
+      when: function(so_far) {
         var retval = false;
-        var enabled = globConfig.get("multitenant_enabled");
-        if (enabled) {
+        //var enabled = globConfig.get("multitenant_enabled");
+        if (so_far.multitenant_enabled) {
+          retval = true;
+        } else {
           retval = false;
         }
-        else {
-          retval = true;
-        }
+
         return retval;
       }
     });
+
+      prompts.push({
+        type: "input",
+        name: "reg_svc_name",
+        message: "Registry Service Name.",
+        default: this.config.get("reg_svc_name"),
+        // validate: function (input) {
+        //   // Declare function as asynchronous, and save the done callback
+        //   var done = this.async();
+      
+        //   // Do async stuff
+        //   setTimeout(function() {
+            
+        //     var names = globConfig.get("module_names");
+        //     var typeModName = typeof names;
+  
+        //     if (typeModName === "undefined") {
+        //       done(null, true);
+        //     }
+        //     else if (input === globConfig.get("app_name")) {
+        //       done('Already used as application name');
+        //       return;
+        //     }
+        //     else if (input === globConfig.get("router_name")) {
+        //       done('Already used as approuter name');
+        //       return;
+        //     }
+        //     else if (input === globConfig.get("router_dir")) {
+        //       done('Already used as approuter path');
+        //       return;
+        //     }
+        //     else if (typeModName === "object") {
+        //       for( var i = 0; i < names.length; i++) {
+        //         var existing_name = names[i];
+        //         if (input == existing_name) {
+        //           done('Already used');
+        //           return;
+        //         }
+        //       }
+        //     }
+        //    // Pass the return value in the done callback
+        //     done(null, true);
+        //   }, 500);
+        // },
+        when: function(so_far) {
+          var retval = false;
+          //var enabled = globConfig.get("multitenant_enabled");
+          if (so_far.multitenant_enabled) {
+            retval = true;
+          } else {
+            retval = false;
+          }
+  
+          return retval;
+        }
+  
+      });
+
 
     this.answers = await this.prompt(prompts);
 
     if (typeof this.config.get("app_name") !== "undefined") {
       this.answers.app_name = this.config.get("app_name");
+    }
+
+    if (typeof this.config.get("router_name") !== "undefined") {
+      this.answers.router_name = this.config.get("router_name");
     }
 
     if (typeof this.config.get("router_dir") !== "undefined") {
@@ -483,6 +617,11 @@ module.exports = class extends Generator {
 
       if (this.answers.multitenant_enabled) {
         this.config.set("multitenant_module", this.answers.module_name);
+        this.config.set("reg_res_name", this.answers.reg_res_name);
+        this.config.set("reg_svc_name", this.answers.reg_svc_name);
+      } else {
+        this.config.delete("reg_res_name");
+        this.config.delete("reg_svc_name");
       }
     }
 
@@ -490,6 +629,7 @@ module.exports = class extends Generator {
 
     var subs = {
       app_name: this.answers.app_name,
+      router_name: this.answers.router_name,
       module_name: this.answers.module_name,
       module_path: this.answers.module_path,
       module_api: this.answers.module_api,
@@ -497,6 +637,8 @@ module.exports = class extends Generator {
       module_route: this.answers.module_route,
       domain_name: this.answers.domain_name,
       uaa_res_name: this.answers.uaa_res_name,
+      reg_res_name: this.answers.reg_res_name,
+      reg_svc_name: this.answers.reg_svc_name,
       hdi_res_name: ""
     };
 
@@ -519,15 +661,32 @@ module.exports = class extends Generator {
     //  this.templatePath("nodejs/gitignore"),
     //  this.destinationPath(this.answers.module_path + "/.gitignore")
     //);
-    this.fs.copy(
-      this.templatePath("nodejs/package.json"),
-      this.destinationPath(this.answers.module_path + "/package.json")
-    );
-    this.fs.copyTpl(
-      this.templatePath("nodejs/server.js"),
-      this.destinationPath(this.answers.module_path + "/server.js"),
-      subs
-    );
+
+    if (this.answers.multitenant_enabled) {
+      this.fs.copy(
+        this.templatePath("nodejs/package.json.mt"),
+        this.destinationPath(this.answers.module_path + "/package.json")
+      );
+    } else {
+      this.fs.copy(
+        this.templatePath("nodejs/package.json"),
+        this.destinationPath(this.answers.module_path + "/package.json")
+      );
+    }
+
+    if (this.answers.multitenant_enabled) {
+      this.fs.copyTpl(
+        this.templatePath("nodejs/server.js.mt"),
+        this.destinationPath(this.answers.module_path + "/server.js"),
+        subs
+      );
+    } else {
+      this.fs.copyTpl(
+        this.templatePath("nodejs/server.js"),
+        this.destinationPath(this.answers.module_path + "/server.js"),
+        subs
+      );
+    }
 
     this.fs.copy(
       this.destinationPath("mta.yaml"),
@@ -543,6 +702,8 @@ module.exports = class extends Generator {
           var pos = 0;
           var indent = "";
           var ins = "";
+
+          var enabled = globConfig.get("multitenant_enabled");
 
           for (var i = 1; i <= lines.length; i++) {
             line = lines[i - 1];
@@ -565,7 +726,7 @@ module.exports = class extends Generator {
               ins += indent + "   parameters:" + "\n";
               ins += indent + "      memory: 256M" + "\n";
               ins += indent + "      disk-quota: 512M" + "\n";
-              ins += indent + "      #host: <?= module_name ?>-${space}" + "\n";
+              ins += indent + "      #host: ${org}-${space}-<?= module_name ?>" + "\n";
               ins += indent + "      #domain: <?= domain_name ?>" + "\n";
               ins += indent + "   provides:" + "\n";
               ins += indent + "    - name: <?= module_api ?>" + "\n";
@@ -573,9 +734,34 @@ module.exports = class extends Generator {
               ins += indent + "         url: ${default-url}" + "\n";
               ins += indent + "   requires:" + "\n";
               ins += indent + "    - name: <?= uaa_res_name ?>";
+              if (enabled) {
+                ins += indent + "\n" + "    - name: <?= reg_res_name ?>";
+              }
               ins += indent + "<?= hdi_res_name ?>";
 
               line += ins;
+            }
+
+// # CDS-MTX
+// #   properties:
+// #      TENANT_HOST_PATTERN: '^(.*).cfapps.us10.hana.ondemand.com'
+
+            pos = line.search("# CDS-MTX");
+            if (pos !== -1) {
+              ins = "";
+              //output += "###indent=" + pos + '\n';
+              indent = "";
+              ins += "\n";
+
+              for (var j = 0; j < pos; j++) {
+                indent += " ";
+              }
+              if (enabled) {
+                ins += indent + "   properties:" + "\n";
+                ins += indent + "      TENANT_HOST_PATTERN: '^(.*)-${space}-${app-name}.<?= domain_name ?>'";
+
+                line += ins;
+              }
             }
 
             pos = line.search("### New Destinations Here ###");
@@ -597,6 +783,63 @@ module.exports = class extends Generator {
               ins += indent + "      forwardAuthToken: true";
 
               line += ins;
+            }
+
+            pos = line.search("### New Resources Here ###");
+            if (pos !== -1) {
+              //output += "###indent=" + pos + '\n';
+              indent = "";
+              for (var j = 0; j < pos; j++) {
+                indent += " ";
+              }
+
+// # CAP-MXT Registration
+// # - name: sub-reg
+// #   type: org.cloudfoundry.managed-service
+// #   requires:
+// #    - name: sub-uaa
+// #   parameters:
+// #    service: saas-registry
+// #    service-plan: application
+// #    service-name: sub_REG
+// #    config:
+// #      xsappname: ~{sub-uaa/XSAPPNAME}
+// #      appName: sub
+// #      displayName: sub
+// #      description: 'sub Multitenant App'
+// #      category: 'sub Category'
+// #      appUrls:
+// #         onSubscription: https://sub-srv-${space}.cfapps.us10.hana.ondemand.com/mtx/v1/provisioning/tenant/{tenantId}
+
+              ins = "";
+              ins += "\n";
+              ins += "\n";
+
+              ins += indent + "# Multitenant Registration(using CAP-MTX style url)" + "\n";
+              ins += indent + " - name: <?= reg_res_name ?>" + "\n";
+              ins += indent + "   type: org.cloudfoundry.managed-service" + "\n";
+              ins += indent + "   requires:" + "\n";
+              ins += indent + "    - name: <?= uaa_res_name ?>" + "\n";
+              ins += indent + "   parameters:" + "\n";
+              ins += indent + "      service: saas-registry" + "\n";
+              ins += indent + "      service-plan: application" + "\n";
+              ins += indent + "      service-name: <?= reg_svc_name ?>" + "\n";
+              ins += indent + "      config:" + "\n";
+              ins += indent + "         xsappname: ~{<?= uaa_res_name ?>/XSAPPNAME}" + "\n";
+              ins += indent + "         appName: <?= app_name ?>" + "\n";
+              ins += indent + "         displayName: <?= app_name ?>" + "\n";
+              ins += indent + "         description: '<?= app_name ?> Multitenant App'" + "\n";
+              ins += indent + "         category: '<?= app_name ?> Category'" + "\n";
+              ins += indent + "         appUrls:" + "\n";
+              ins += indent + "            onSubscription: https://${org}-${space}-<?= module_name ?>.<?= domain_name ?>/mtx/v1/provisioning/tenant/{tenantId}" + "\n";
+
+              line += ins;
+            }
+
+            // Value replacements
+            pos = line.search("tenant-mode: dedicated");
+            if (pos !== -1) {
+              line = line.replace("tenant-mode: dedicated", "tenant-mode: shared");
             }
 
             output += line + "\n";
@@ -718,6 +961,8 @@ module.exports = class extends Generator {
           var indent = "";
           var ins = "";
 
+          var enabled = globConfig.get("multitenant_enabled");
+
           var lines = String(content).split("\n");
           for (var i = 1; i <= lines.length; i++) {
             line = lines[i - 1];
@@ -728,13 +973,27 @@ module.exports = class extends Generator {
               ins += "\n";
               indent = "    ";
 
+              if (enabled) {
+                ins += indent + "{" + "\n";
+                ins += indent + '  "source": "(mtx/v1/provisioning/tenant/)(.*)",' + "\n";
+                ins += indent + '  "destination": "<?= module_be ?>",' + "\n";
+                ins += indent + '  "httpMethods": ["GET", "PUT", "DELETE"],' + "\n";
+                ins += indent + '  "csrfProtection": true,' + "\n";
+                ins += indent + '  "authenticationType": "none"' + "\n";
+                ins += indent + "}," + "\n";
+
+                ins += indent + "{" + "\n";
+                ins += indent + '  "source": "(srv/)(.*)",' + "\n";
+                ins += indent + '  "destination": "<?= module_be ?>",' + "\n";
+                ins += indent + '  "csrfProtection": true,' + "\n";
+                ins += indent + '  "authenticationType": "xsuaa"' + "\n";
+                ins += indent + "}," + "\n";
+
+              }
+
               ins += indent + "{" + "\n";
-              ins +=
-                indent +
-                '  "source": "(<?= module_route ?>/)(.*)",' +
-                "\n";
-              ins +=
-                indent + '  "destination": "<?= module_be ?>",' + "\n";
+              ins += indent + '  "source": "(<?= module_route ?>/)(.*)",' + "\n";
+              ins += indent + '  "destination": "<?= module_be ?>",' + "\n";
               ins += indent + '  "csrfProtection": true,' + "\n";
               ins += indent + '  "authenticationType": "xsuaa"' + "\n";
               ins += indent + "},";

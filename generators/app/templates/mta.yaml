@@ -28,7 +28,7 @@ modules:
    build-parameters:
       ignore: ["node_modules/"]
    parameters:
-      #host: your_org-${space}-<%= router_name %>
+      #host: ${org}-${space}-<%= router_name %>
       #domain: <%= domain_name %>
       #routes:
       #  - route: <%= router_name %>-${space}-${app-name}.${default-domain}
@@ -40,8 +40,6 @@ modules:
          url: ${default-url}
          application: ${app-name}
 # CDS-MTX
-#   properties:
-#      TENANT_HOST_PATTERN: '^(.*).<%= domain_name %>'
    requires:
    # cf bind-service <%= router_name %> <%= uaa_svc_name %>
     - name: <%= uaa_res_name %>
@@ -49,44 +47,52 @@ modules:
 
 resources:
 
-### New Resources Here ###
-
 # cf create-service xsuaa application <%= uaa_svc_name %> -c ./cds-security.json
  - name: <%= uaa_res_name %>
    type: org.cloudfoundry.managed-service
    requires:
     - name: Router_api
    properties:
-      THEXSAPPNAME: ${xsuaa-app}
+      XSAPPNAME: ${xsuaa-app}
    parameters:
       # Re-run the following command after changing any @(requires: []) definitions in srv/*.cds
       # Run this from the root of the project and uncomment the path:
       # cds compile srv/ --to xsuaa,json > cds-security.json
       #path: ./cds-security.json
-      service-plan: application
+      # The combination of path: and config.scopes: Doesn't seem work.  Use one or the other.
+      # cds compile srv/ --to xsuaa,yaml and make sure the config: below matches
+      #path: ./cds-security.json
+      #path: ./xs-security.json
       service: xsuaa
+      service-plan: application
       service-name: <%= uaa_svc_name %>
       xsuaa-app: ${space}-~{Router_api/application}
       # Define within config what used to be in the xs-security.json file.  path: now pulls in cds scopes/role templates
       # Convert with https://www.json2yaml.com/
       # https://github.wdf.sap.corp/pages/cap/guides/authorization#role-assignments-with-xsuaa
       config:
-         xsappname: <%= app_name %>
+         xsappname: ${xsuaa-app}
+         ### tenant-mode
          tenant-mode: dedicated
-         # tenant-mode: shared
          description: Security profile of the <%= app_name %> application
          scopes:
           - name: "$XSAPPNAME.Callback"
             description: With this scope set, the callbacks for tenant onboarding, offboarding and getDependencies can be called.
             grant-as-authority-to-apps: 
              - "$XSAPPNAME(application,sap-provisioning,tenant-onboarding)"
-          - name: uaa.user
-            description: UAA
+          - name: "$XSAPPNAME.Administrator"
+            description: Administrate the application
+          - name: "$XSAPPNAME.User"
+            description: Use the application
          role-templates:
-          - name: Token_Exchange
-            description: UAA
+          - name: Administrator
+            description: Administrator
             scope-references:
-             - uaa.user
+             - "$XSAPPNAME.Administrator"
+          - name: User
+            description: User
+            scope-references:
+             - "$XSAPPNAME.User"
          oauth2-configuration:
             redirect-uris: 
              - "http*://*.<%= domain_name %>/**"
@@ -111,7 +117,7 @@ resources:
 #    service-plan: application
 #    service-name: <%= app_name %>_REG
 #    config:
-#      xsappname: ~{<%= app_name %>-uaa/THEXSAPPNAME}
+#      xsappname: ~{<%= app_name %>-uaa/XSAPPNAME}
 #      appName: <%= app_name %>
 #      displayName: <%= app_name %>
 #      description: '<%= app_name %> Multitenant App'
@@ -119,3 +125,4 @@ resources:
 #      appUrls:
 #         onSubscription: https://<%= app_name %>-srv-${space}.<%= domain_name %>/mtx/v1/provisioning/tenant/{tenantId}
 
+### New Resources Here ###
