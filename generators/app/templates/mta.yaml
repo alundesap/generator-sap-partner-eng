@@ -21,10 +21,10 @@ modules:
 
 ### New Modules Here ###
 
-# cf push <%= router_name %> -p <%= router_dir %> -n <%= router_name %> -d <%= domain_name %> -k 256M -m 256M
+# cf push <%= router_name %> -p <%= router_path %> -n <%= router_name %> -d <%= domain_name %> -k 256M -m 256M
  - name: <%= router_name %>
    type: html5
-   path: <%= router_dir %>
+   path: <%= router_path %>
    build-parameters:
       ignore: ["node_modules/"]
    parameters:
@@ -101,7 +101,7 @@ resources:
 # - name: <%= app_name %>-mgd
 #   type: org.cloudfoundry.managed-service
 #   requires:
-#    - name: <%= app_name %>_srv_api
+#    - name: <%= app_name %>_services_api
 #   parameters:
 #      service-plan: hdi-shared
 #      service: managed-hana

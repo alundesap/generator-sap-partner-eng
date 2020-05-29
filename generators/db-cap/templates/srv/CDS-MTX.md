@@ -60,7 +60,7 @@
 #  - name: <%= app_name %>-mgd
 #    type: org.cloudfoundry.managed-service
 #    requires:
-#     - name: <%= app_name %>_srv_api
+#     - name: <%= app_name %>_services_api
 #    parameters:
 #       service-plan: hdi-shared
 #       service: managed-hana

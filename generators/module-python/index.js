@@ -26,7 +26,7 @@ module.exports = class extends Generator {
       python_module_dir: "python",
       python_module_api: the_app_name + "_pyt_api",
       python_module_be: the_app_name + "_pyt_be",
-      router_dir: "web",
+      router_path: "web",
       python_module_route: "python"
     });
   }
@@ -55,16 +55,16 @@ module.exports = class extends Generator {
       this.log("Using app_name: " + this.answers.app_name);
     }
 
-    if (typeof this.config.get("router_dir") === "undefined") {
+    if (typeof this.config.get("router_path") === "undefined") {
       prompts.push({
         type: "input",
-        name: "router_dir",
+        name: "router_path",
         message: "Application router path",
-        default: this.config.get("router_dir")
+        default: this.config.get("router_path")
       });
     } else {
-      this.answers.router_dir = this.config.get("router_dir");
-      this.log("Using router_dir: " + this.answers.router_dir);
+      this.answers.router_path = this.config.get("router_path");
+      this.log("Using router_path: " + this.answers.router_path);
     }
 
     prompts.push({
@@ -108,8 +108,8 @@ module.exports = class extends Generator {
       this.answers.app_name = this.config.get("app_name");
     }
 
-    if (typeof this.config.get("router_dir") !== "undefined") {
-      this.answers.router_dir = this.config.get("router_dir");
+    if (typeof this.config.get("router_path") !== "undefined") {
+      this.answers.router_path = this.config.get("router_path");
     }
 
     if (typeof this.config.get("uaa_res_name") !== "undefined") {
@@ -129,7 +129,7 @@ module.exports = class extends Generator {
     this.config.set("python_module_api", this.answers.python_module_api);
     this.config.set("python_module_be", this.answers.python_module_be);
     this.config.set("python_module_route", this.answers.python_module_route);
-    this.config.set("router_dir", this.answers.router_dir);
+    this.config.set("router_path", this.answers.router_path);
 
     this.config.save();
 
@@ -261,8 +261,8 @@ module.exports = class extends Generator {
     );
 
     this.fs.copy(
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
       {
         process: function(content) {
           // var output = "typeof(content) : " + typeof(content);
@@ -302,15 +302,15 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
       subs,
       { delimiter: "?" }
     );
 
     this.fs.copy(
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
       {
         process: function(content) {
           // var output = "typeof(content) : " + typeof(content);
@@ -348,8 +348,8 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
       subs,
       { delimiter: "?" }
     );
@@ -364,10 +364,10 @@ module.exports = class extends Generator {
       "\n The Python module " +
         this.answers.python_module_name +
         " has be added to your project. \nDouble check your mta.yaml, " +
-        this.answers.router_dir +
+        this.answers.router_path +
         "/xs-app.json" +
         ", and " +
-        this.answers.router_dir +
+        this.answers.router_path +
         "/resources/index.html" +
         " files for issues."
     );

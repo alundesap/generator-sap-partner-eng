@@ -21,8 +21,8 @@ module.exports = class extends Generator {
     }
 
     this.config.defaults({
-      db_name: the_app_name + "-hdb",
-      db_dir: "db",
+      database_name: the_app_name + "-hdb",
+      database_path: "db",
       db_schema_name: the_app_name.toUpperCase() + "_DB",
       hdi_res_name: the_app_name + "-hdi",
       hdi_svc_name: the_app_name.toUpperCase() + "_HDI"
@@ -55,16 +55,16 @@ module.exports = class extends Generator {
 
     prompts.push({
       type: "input",
-      name: "db_name",
+      name: "database_name",
       message: "DB Module Name.",
-      default: this.config.get("db_name")
+      default: this.config.get("database_name")
     });
 
     prompts.push({
       type: "input",
-      name: "db_dir",
+      name: "database_path",
       message: "DB Module path.",
-      default: this.config.get("db_dir")
+      default: this.config.get("database_path")
     });
 
     prompts.push({
@@ -98,8 +98,8 @@ module.exports = class extends Generator {
   }
 
   writing() {
-    this.config.set("db_name", this.answers.db_name);
-    this.config.set("db_dir", this.answers.db_dir);
+    this.config.set("database_name", this.answers.database_name);
+    this.config.set("database_path", this.answers.database_path);
     this.config.set("db_schema_name", this.answers.db_schema_name);
     this.config.set("hdi_res_name", this.answers.hdi_res_name);
     this.config.set("hdi_svc_name", this.answers.hdi_svc_name);
@@ -108,8 +108,8 @@ module.exports = class extends Generator {
 
     var subs = {
       app_name: this.answers.app_name,
-      db_name: this.answers.db_name,
-      db_dir: this.answers.db_dir,
+      database_name: this.answers.database_name,
+      database_path: this.answers.database_path,
       db_schema_name: this.answers.db_schema_name,
       hdi_res_name: this.answers.hdi_res_name,
       hdi_svc_name: this.answers.hdi_svc_name
@@ -117,22 +117,22 @@ module.exports = class extends Generator {
 
     this.fs.copy(
       this.templatePath("db/package.json"),
-      this.destinationPath(this.answers.db_dir + "/package.json")
+      this.destinationPath(this.answers.database_path + "/package.json")
     );
 
     this.fs.copy(
       this.templatePath("db/src/.hdiconfig"),
-      this.destinationPath(this.answers.db_dir + "/src/.hdiconfig")
+      this.destinationPath(this.answers.database_path + "/src/.hdiconfig")
     );
     this.fs.copy(
       this.templatePath("db/src/.hdinamespace"),
-      this.destinationPath(this.answers.db_dir + "/src/.hdinamespace")
+      this.destinationPath(this.answers.database_path + "/src/.hdinamespace")
     );
 
     this.fs.copyTpl(
       this.templatePath("db/src/defaults/default_access_role.hdbrole"),
       this.destinationPath(
-        this.answers.db_dir + "/src/defaults/default_access_role.hdbrole"
+        this.answers.database_path + "/src/defaults/default_access_role.hdbrole"
       ),
       subs
     );
@@ -140,7 +140,7 @@ module.exports = class extends Generator {
     this.fs.copyTpl(
       this.templatePath("db/src/roles/app_name_admin.hdbrole"),
       this.destinationPath(
-        this.answers.db_dir +
+        this.answers.database_path +
           "/src/roles/" +
           this.answers.app_name +
           "_admin.hdbrole"
@@ -150,33 +150,33 @@ module.exports = class extends Generator {
 
     this.fs.copy(
       this.templatePath("db/src/data/.hdinamespace"),
-      this.destinationPath(this.answers.db_dir + "/src/data/.hdinamespace")
+      this.destinationPath(this.answers.database_path + "/src/data/.hdinamespace")
     );
     this.fs.copy(
       this.templatePath("db/src/data/sensors.hdbcds"),
-      this.destinationPath(this.answers.db_dir + "/src/data/sensors.hdbcds")
+      this.destinationPath(this.answers.database_path + "/src/data/sensors.hdbcds")
     );
     this.fs.copy(
       this.templatePath("db/src/data/sys.hdbsynonym"),
-      this.destinationPath(this.answers.db_dir + "/src/data/sys.hdbsynonym")
+      this.destinationPath(this.answers.database_path + "/src/data/sys.hdbsynonym")
     );
     this.fs.copy(
       this.templatePath("db/src/data/temp.csv"),
-      this.destinationPath(this.answers.db_dir + "/src/data/temp.csv")
+      this.destinationPath(this.answers.database_path + "/src/data/temp.csv")
     );
     this.fs.copy(
       this.templatePath("db/src/data/temp.hdbtabledata"),
-      this.destinationPath(this.answers.db_dir + "/src/data/temp.hdbtabledata")
+      this.destinationPath(this.answers.database_path + "/src/data/temp.hdbtabledata")
     );
     this.fs.copy(
       this.templatePath("db/src/data/tempId.hdbsequence"),
-      this.destinationPath(this.answers.db_dir + "/src/data/tempId.hdbsequence")
+      this.destinationPath(this.answers.database_path + "/src/data/tempId.hdbsequence")
     );
 
     this.fs.copy(
       this.templatePath("db/src/views/temps.hdbcalculationview"),
       this.destinationPath(
-        this.answers.db_dir + "/src/views/temps.hdbcalculationview"
+        this.answers.database_path + "/src/views/temps.hdbcalculationview"
       )
     );
 
@@ -205,9 +205,9 @@ module.exports = class extends Generator {
 
               var ins = "";
               ins += "\n\n";
-              ins += indent + " - name: <?= db_name ?>" + "\n";
+              ins += indent + " - name: <?= database_name ?>" + "\n";
               ins += indent + "   type: hdb" + "\n";
-              ins += indent + "   path: <?= db_dir ?>" + "\n";
+              ins += indent + "   path: <?= database_path ?>" + "\n";
               ins += indent + "   parameters:" + "\n";
               ins += indent + "      memory: 512M" + "\n";
               ins += indent + "      disk-quota: 512M" + "\n";

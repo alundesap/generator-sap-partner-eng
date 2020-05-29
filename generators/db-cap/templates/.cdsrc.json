@@ -4,16 +4,16 @@
     "tasks": [
       {
         "for": "hana",
-        "src": "<%= db_dir %>",
+        "src": "<%= database_path %>",
         "options": {
-          "model": ["<%= db_dir %>", "<%= srv_dir %>"]
+          "model": ["<%= database_path %>", "<%= srv_dir %>"]
         }
       },
       {
         "for": "node-cf",
         "src": "<%= srv_dir %>",
         "options": {
-          "model": ["<%= db_dir %>", "<%= srv_dir %>"]
+          "model": ["<%= database_path %>", "<%= srv_dir %>"]
         }
       }
     ]

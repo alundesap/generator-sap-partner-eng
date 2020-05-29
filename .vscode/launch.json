@@ -6,6 +6,30 @@
     "configurations": [
         {
             "type": "node",
+            "request": "attach",
+            "name": "CF MTX0SRV",
+            "address": "127.0.0.1",
+            "port": 9229,
+            "localRoot": "/Users/i830671/git/mtx0/srv",
+            "remoteRoot": "/home/vcap/app",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Local MTX0SRV",
+            "address": "127.0.0.1",
+            "port": 9229,
+            "localRoot": "/Users/i830671/git/mtx0/srv",
+            "remoteRoot": "/Users/i830671/git/mtx0/srv",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+                {
+            "type": "node",
             "request": "launch",
             "name": "Launch Yo",
             "skipFiles": [

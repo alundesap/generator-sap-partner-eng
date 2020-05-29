@@ -21,13 +21,13 @@ module.exports = class extends Generator {
     }
 
     this.config.defaults({
-      // db_name: the_app_name + "-hdb",
-      // db_dir: "db",
+      // database_name: the_app_name + "-hdb",
+      // database_path: "db",
       database_guid: "run cf service <hana-db instance name> --guid",
       db_schema_name: the_app_name.toUpperCase() + "_DB",
       sch_res_name: the_app_name + "-sch",
       sch_svc_name: the_app_name.toUpperCase() + "_SCH",
-      router_dir: "web",
+      router_path: "web",
       pyt_sch_name: the_app_name + "-pyt-sch",
       pyt_sch_dir: "pyt-sch",
       pyt_sch_api: the_app_name + "_pyt_sch_api",
@@ -60,16 +60,16 @@ module.exports = class extends Generator {
       this.log("Using app_name: " + this.answers.app_name);
     }
 
-    if (typeof this.config.get("router_dir") === "undefined") {
+    if (typeof this.config.get("router_path") === "undefined") {
       prompts.push({
         type: "input",
-        name: "router_dir",
+        name: "router_path",
         message: "Application router path",
-        default: this.config.get("router_dir")
+        default: this.config.get("router_path")
       });
     } else {
-      this.answers.router_dir = this.config.get("router_dir");
-      this.log("Using router_dir: " + this.answers.router_dir);
+      this.answers.router_path = this.config.get("router_path");
+      this.log("Using router_path: " + this.answers.router_path);
     }
 
     prompts.push({
@@ -144,8 +144,8 @@ module.exports = class extends Generator {
       this.answers.app_name = this.config.get("app_name");
     }
 
-    if (typeof this.config.get("router_dir") !== "undefined") {
-      this.answers.router_dir = this.config.get("router_dir");
+    if (typeof this.config.get("router_path") !== "undefined") {
+      this.answers.router_path = this.config.get("router_path");
     }
 
     if (typeof this.config.get("uaa_res_name") !== "undefined") {
@@ -155,8 +155,8 @@ module.exports = class extends Generator {
   }
 
   writing() {
-    // this.config.set("db_name", this.answers.db_name);
-    // this.config.set("db_dir", this.answers.db_dir);
+    // this.config.set("database_name", this.answers.database_name);
+    // this.config.set("database_path", this.answers.database_path);
     this.config.set("database_guid", this.answers.database_guid);
     this.config.set("db_schema_name", this.answers.db_schema_name);
     this.config.set("sch_res_name", this.answers.sch_res_name);
@@ -166,7 +166,7 @@ module.exports = class extends Generator {
     this.config.set("pyt_sch_api", this.answers.pyt_sch_api);
     this.config.set("pyt_sch_be", this.answers.pyt_sch_be);
     this.config.set("pyt_sch_route", this.answers.pyt_sch_route);
-    this.config.set("router_dir", this.answers.router_dir);
+    this.config.set("router_path", this.answers.router_path);
 
     this.config.save();
 
@@ -177,8 +177,8 @@ module.exports = class extends Generator {
 
     var subs = {
       app_name: this.answers.app_name,
-      // db_name: this.answers.db_name,
-      // db_dir: this.answers.db_dir,
+      // database_name: this.answers.database_name,
+      // database_path: this.answers.database_path,
       database_guid: this.answers.database_guid,
       db_schema_name: this.answers.db_schema_name,
       schemaline: schemaline,
@@ -322,8 +322,8 @@ module.exports = class extends Generator {
     );
 
     this.fs.copy(
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
       {
         process: function(content) {
           // var output = "typeof(content) : " + typeof(content);
@@ -363,15 +363,15 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
       subs,
       { delimiter: "?" }
     );
 
     this.fs.copy(
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
       {
         process: function(content) {
           // var output = "typeof(content) : " + typeof(content);
@@ -409,8 +409,8 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
       subs,
       { delimiter: "?" }
     );

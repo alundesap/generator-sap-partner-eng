@@ -19,7 +19,7 @@
       "db": {
         "kind": "hana",
         "model": [
-          "<%= db_dir %>",
+          "<%= database_path %>",
           "<%= srv_dir %>"
         ]
       }
@@ -32,7 +32,7 @@
     }
   },
   "files": [
-    "<%= db_dir %>",
+    "<%= database_path %>",
     "<%= srv_dir %>"
   ]
 }

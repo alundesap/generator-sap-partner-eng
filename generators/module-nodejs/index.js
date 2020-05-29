@@ -129,7 +129,7 @@ module.exports = class extends Generator {
       reg_res_name: the_app_name + "-reg",
       reg_svc_name: the_app_name.toUpperCase() + "_REG",
       router_name: the_app_name + "-app",
-      router_dir: "app"
+      router_path: "app"
     });
    
     globConfig = this.config;
@@ -173,16 +173,16 @@ module.exports = class extends Generator {
       this.log("Using router_name: " + this.answers.router_name);
     }
 
-    if (typeof this.config.get("router_dir") === "undefined") {
+    if (typeof this.config.get("router_path") === "undefined") {
       prompts.push({
         type: "input",
-        name: "router_dir",
+        name: "router_path",
         message: "Application router path",
-        default: this.config.get("router_dir")
+        default: this.config.get("router_path")
       });
     } else {
-      this.answers.router_dir = this.config.get("router_dir");
-      this.log("Using router_dir: " + this.answers.router_dir);
+      this.answers.router_path = this.config.get("router_path");
+      this.log("Using router_path: " + this.answers.router_path);
     }
 
     prompts.push({
@@ -211,7 +211,7 @@ module.exports = class extends Generator {
             done('Already used as approuter name');
             return;
           }
-          else if (input === globConfig.get("router_dir")) {
+          else if (input === globConfig.get("router_path")) {
             done('Already used as approuter path');
             return;
           }
@@ -248,7 +248,7 @@ module.exports = class extends Generator {
           if (typeModPath === "undefined") {
             done(null, true);
           }
-          else if (input === globConfig.get("router_dir")) {
+          else if (input === globConfig.get("router_path")) {
             done('Already used as approuter path');
             return;
           } 
@@ -256,7 +256,7 @@ module.exports = class extends Generator {
             done('Already used as database path');
             return;
           } 
-          else if (input === globConfig.get("services_dir")) {
+          else if (input === globConfig.get("services_path")) {
             done('Already used as services path');
             return;
           } 
@@ -293,7 +293,7 @@ module.exports = class extends Generator {
           if (typeModPath === "undefined") {
             done(null, true);
           }
-          else if (input === globConfig.get("router_dir")) {
+          else if (input === globConfig.get("router_path")) {
             done('Already used as approuter path');
             return;
           } 
@@ -301,7 +301,7 @@ module.exports = class extends Generator {
             done('Already used as database path');
             return;
           } 
-          else if (input === globConfig.get("services_dir")) {
+          else if (input === globConfig.get("services_path")) {
             done('Already used as services path');
             return;
           } 
@@ -338,7 +338,7 @@ module.exports = class extends Generator {
           if (typeModPath === "undefined") {
             done(null, true);
           }
-          else if (input === globConfig.get("router_dir")) {
+          else if (input === globConfig.get("router_path")) {
             done('Already used as approuter path');
             return;
           } 
@@ -346,7 +346,7 @@ module.exports = class extends Generator {
             done('Already used as database path');
             return;
           } 
-          else if (input === globConfig.get("services_dir")) {
+          else if (input === globConfig.get("services_path")) {
             done('Already used as services path');
             return;
           } 
@@ -384,7 +384,7 @@ module.exports = class extends Generator {
           if (typeModPath === "undefined") {
             done(null, true);
           }
-          else if (input === globConfig.get("router_dir")) {
+          else if (input === globConfig.get("router_path")) {
             done('Already used as approuter path');
             return;
           } 
@@ -392,7 +392,7 @@ module.exports = class extends Generator {
             done('Already used as database path');
             return;
           } 
-          else if (input === globConfig.get("services_dir")) {
+          else if (input === globConfig.get("services_path")) {
             done('Already used as services path');
             return;
           } 
@@ -456,7 +456,7 @@ module.exports = class extends Generator {
       //       done('Already used as approuter name');
       //       return;
       //     }
-      //     else if (input === globConfig.get("router_dir")) {
+      //     else if (input === globConfig.get("router_path")) {
       //       done('Already used as approuter path');
       //       return;
       //     }
@@ -512,7 +512,7 @@ module.exports = class extends Generator {
         //       done('Already used as approuter name');
         //       return;
         //     }
-        //     else if (input === globConfig.get("router_dir")) {
+        //     else if (input === globConfig.get("router_path")) {
         //       done('Already used as approuter path');
         //       return;
         //     }
@@ -554,8 +554,8 @@ module.exports = class extends Generator {
       this.answers.router_name = this.config.get("router_name");
     }
 
-    if (typeof this.config.get("router_dir") !== "undefined") {
-      this.answers.router_dir = this.config.get("router_dir");
+    if (typeof this.config.get("router_path") !== "undefined") {
+      this.answers.router_path = this.config.get("router_path");
     }
 
     if (typeof this.config.get("domain_name") !== "undefined") {
@@ -610,7 +610,7 @@ module.exports = class extends Generator {
     //this.config.set("module_api", this.answers.module_api);
     //this.config.set("module_be", this.answers.module_be);
     //this.config.set("module_route", this.answers.module_route);
-    //this.config.set("router_dir", this.answers.router_dir);
+    //this.config.set("router_path", this.answers.router_path);
 
     if (typeof this.answers.multitenant_enabled !== "undefined") {
       this.config.set("multitenant_enabled", this.answers.multitenant_enabled);
@@ -837,9 +837,11 @@ module.exports = class extends Generator {
             }
 
             // Value replacements
-            pos = line.search("tenant-mode: dedicated");
-            if (pos !== -1) {
-              line = line.replace("tenant-mode: dedicated", "tenant-mode: shared");
+            if (enabled) {
+              pos = line.search("tenant-mode: dedicated");
+              if (pos !== -1) {
+                line = line.replace("tenant-mode: dedicated", "tenant-mode: shared");
+              }
             }
 
             output += line + "\n";
@@ -950,8 +952,8 @@ module.exports = class extends Generator {
     );
 
     this.fs.copy(
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
       {
         process: function(content) {
           // var output = "typeof(content) : " + typeof(content);
@@ -1010,15 +1012,15 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
-      this.destinationPath(this.answers.router_dir + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
+      this.destinationPath(this.answers.router_path + "/xs-app.json"),
       subs,
       { delimiter: "?" }
     );
 
     this.fs.copy(
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
       {
         process: function(content) {
           // var output = "typeof(content) : " + typeof(content);
@@ -1056,8 +1058,8 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
       subs,
       { delimiter: "?" }
     );
@@ -1072,10 +1074,10 @@ module.exports = class extends Generator {
       "\n The NodeJS module " +
         this.answers.module_name +
         " has be added to your project. \nDouble check your mta.yaml, " +
-        this.answers.router_dir +
+        this.answers.router_path +
         "/xs-app.json" +
         ", and " +
-        this.answers.router_dir +
+        this.answers.router_path +
         "/resources/index.html" +
         " files for issues."
     );

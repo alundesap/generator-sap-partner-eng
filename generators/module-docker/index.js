@@ -47,7 +47,7 @@ module.exports = class extends Generator {
       docker_module_img: "alunde/cf-cli:latest",
       docker_module_api: the_app_name + "_doc_api",
       docker_module_be: the_app_name + "_doc_be",
-      router_dir: "web",
+      router_path: "web",
       docker_module_route: "cf-cli"
     });
   }
@@ -123,16 +123,16 @@ module.exports = class extends Generator {
       default: this.config.get("docker_module_be")
     });
 
-    if (typeof this.config.get("router_dir") === "undefined") {
+    if (typeof this.config.get("router_path") === "undefined") {
       prompts.push({
         type: "input",
-        name: "router_dir",
+        name: "router_path",
         message: "Enter your app router directory name.",
-        default: this.config.get("router_dir") // Default to current folder name
+        default: this.config.get("router_path") // Default to current folder name
       });
     } else {
-      this.answers.router_dir = this.config.get("router_dir");
-      this.log("Using router_dir: " + this.answers.router_dir);
+      this.answers.router_path = this.config.get("router_path");
+      this.log("Using router_path: " + this.answers.router_path);
     }
 
     prompts.push({
@@ -185,11 +185,11 @@ module.exports = class extends Generator {
       the_app_name = this.config.get("app_name");
     }
 
-    var the_router_dir = "";
-    if (typeof this.config.get("router_dir") === "undefined") {
-      the_router_dir = this.answers.router_dir;
+    var the_router_path = "";
+    if (typeof this.config.get("router_path") === "undefined") {
+      the_router_path = this.answers.router_path;
     } else {
-      the_router_dir = this.config.get("router_dir");
+      the_router_path = this.config.get("router_path");
     }
 
     //var provides_api = get_provides_api(the_app_name);
@@ -289,8 +289,8 @@ module.exports = class extends Generator {
     );
 
     this.fs.copy(
-      this.destinationPath(the_router_dir + "/xs-app.json"),
-      this.destinationPath(the_router_dir + "/xs-app.json"),
+      this.destinationPath(the_router_path + "/xs-app.json"),
+      this.destinationPath(the_router_path + "/xs-app.json"),
       {
         process: function(content) {
           // var output = "typeof(content) : " + typeof(content);
@@ -329,15 +329,15 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.destinationPath(the_router_dir + "/xs-app.json"),
-      this.destinationPath(the_router_dir + "/xs-app.json"),
+      this.destinationPath(the_router_path + "/xs-app.json"),
+      this.destinationPath(the_router_path + "/xs-app.json"),
       subs,
       { delimiter: "?" }
     );
 
     this.fs.copy(
-      this.destinationPath(the_router_dir + "/resources/index.html"),
-      this.destinationPath(the_router_dir + "/resources/index.html"),
+      this.destinationPath(the_router_path + "/resources/index.html"),
+      this.destinationPath(the_router_path + "/resources/index.html"),
       {
         process: function(content) {
           // var output = "typeof(content) : " + typeof(content);
@@ -371,8 +371,8 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.destinationPath(the_router_dir + "/resources/index.html"),
-      this.destinationPath(the_router_dir + "/resources/index.html"),
+      this.destinationPath(the_router_path + "/resources/index.html"),
+      this.destinationPath(the_router_path + "/resources/index.html"),
       subs,
       { delimiter: "?" }
     );

@@ -108,9 +108,9 @@ module.exports = class extends Generator {
       app_name: "app",
       app_desc: "App Description",
       router_name: "app",
-      router_dir: "app",
-      database_dir: "db",
-      services_dir: "srv",
+      router_path: "app",
+      database_path: "db",
+      services_path: "srv",
       uaa_res_name: "app-uaa",
       uaa_svc_name: "APP_UAA"
     });
@@ -197,21 +197,21 @@ module.exports = class extends Generator {
       },
       {
         type: "input",
-        name: "router_dir",
+        name: "router_path",
         message: "Application router path",
-        default: this.config.get("router_dir")
+        default: this.config.get("router_path")
       },
       {
         type: "input",
-        name: "database_dir",
+        name: "database_path",
         message: "Domain/Database model path",
-        default: this.config.get("database_dir")
+        default: this.config.get("database_path")
       },
       {
         type: "input",
-        name: "services_dir",
+        name: "services_path",
         message: "Services definition path",
-        default: this.config.get("services_dir")
+        default: this.config.get("services_path")
       },
       {
         type: "input",
@@ -249,9 +249,9 @@ module.exports = class extends Generator {
 
     this.config.set("router_name", this.answers.router_name);
     this.config.set("domain_name", this.answers.domain_name);
-    this.config.set("router_dir", this.answers.router_dir);
-    this.config.set("database_dir", this.answers.database_dir);
-    this.config.set("services_dir", this.answers.services_dir);
+    this.config.set("router_path", this.answers.router_path);
+    this.config.set("database_path", this.answers.database_path);
+    this.config.set("services_path", this.answers.services_path);
 
     this.config.set("uaa_res_name", this.answers.uaa_res_name);
     this.config.set("uaa_svc_name", this.answers.uaa_svc_name);
@@ -268,9 +268,9 @@ module.exports = class extends Generator {
       app_desc: this.answers.app_desc,
       router_name: this.answers.router_name,
       domain_name: this.answers.domain_name,
-      router_dir: this.answers.router_dir,
-      database_dir: this.answers.database_dir,
-      services_dir: this.answers.services_dir,
+      router_path: this.answers.router_path,
+      database_path: this.answers.database_path,
+      services_path: this.answers.services_path,
       uaa_res_name: this.answers.uaa_res_name,
       uaa_svc_name: this.answers.uaa_svc_name
     };
@@ -320,31 +320,31 @@ module.exports = class extends Generator {
 
     this.fs.copy(
       this.templatePath("app/package.json"),
-      this.destinationPath(this.answers.router_dir + "/package.json")
+      this.destinationPath(this.answers.router_path + "/package.json")
     );
     this.fs.copy(
       this.templatePath("app/xs-app.json"),
-      this.destinationPath(this.answers.router_dir + "/xs-app.json")
+      this.destinationPath(this.answers.router_path + "/xs-app.json")
     );
     this.fs.copyTpl(
       this.templatePath("app/resources/index.html"),
-      this.destinationPath(this.answers.router_dir + "/resources/index.html"),
+      this.destinationPath(this.answers.router_path + "/resources/index.html"),
       subs
     );
 
     this.fs.copy(
       this.templatePath("db/README.md"),
-      this.destinationPath(this.answers.database_dir + "/README.md")
+      this.destinationPath(this.answers.database_path + "/README.md")
     );
 
     this.fs.copy(
       this.templatePath("srv/README.md"),
-      this.destinationPath(this.answers.services_dir + "/README.md")
+      this.destinationPath(this.answers.services_path + "/README.md")
     );
 
     this.fs.copy(
       this.templatePath("app/resources/favicon.ico"),
-      this.destinationPath(this.answers.router_dir + "/resources/favicon.ico")
+      this.destinationPath(this.answers.router_path + "/resources/favicon.ico")
     );
 
     // Now xs-security is embodied in the mta.yaml file freeing this up for cds-security.json
