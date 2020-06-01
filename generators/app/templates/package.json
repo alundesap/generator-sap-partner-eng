@@ -82,6 +82,10 @@
       },
       "files": [
         "db",
-        "srv"
+        "srv",
+	"cdsrc.json",
+	"eslintrc",
+	"gitignore",
+	"vscode"
       ]
     }
