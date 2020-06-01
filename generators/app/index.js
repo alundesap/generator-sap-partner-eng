@@ -20,6 +20,20 @@ const mkdirp = require("mkdirp");
 
 const exec = require("child_process").execSync;
 
+function cf_is_logged_in() {
+  var result = exec('cf api');
+  var resStr = result.toString('utf-8');
+  if (resStr.search("No API endpoint set.") >= 0) {
+    return false;
+  } else {
+    if (resStr.search("Not logged in.") >= 0) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+}
+
 function get_domains() {
 
   var retarry = [];
@@ -27,28 +41,33 @@ function get_domains() {
   // retarry.push('domain.com');
  
   var result = exec('cf domains');
-  var output = result.toString("utf8");
 
-    var lines = String(output).split("\n");
-    var line = "";
-    var first = true;
-    for (var i = 1; i <= lines.length; i++) {
-      line = lines[i - 1];
-      //console.log(`line: ${line}`);
-      var words = String(line.replace(/\s+/g, ' ')).split(" ");
-      if ((words[1] == 'shared') || (words[1] == 'owned')) {
-       if (first) {
-        // console.log('domain: ' + words[0]);
-        retarry.push(words[0]);
-        first = false;
-      }
-      else {
-       if (words[1] == 'owned') {
-         //console.log('domain: ' + words[0]);
-         retarry.push(words[0]);
+  if (result) {
+    var output = result.toString("utf8");
+
+      var lines = String(output).split("\n");
+      var line = "";
+      var first = true;
+      for (var i = 1; i <= lines.length; i++) {
+        line = lines[i - 1];
+        //console.log(`line: ${line}`);
+        var words = String(line.replace(/\s+/g, ' ')).split(" ");
+        if ((words[1] == 'shared') || (words[1] == 'owned')) {
+        if (first) {
+          // console.log('domain: ' + words[0]);
+          retarry.push(words[0]);
+          first = false;
+        }
+        else {
+        if (words[1] == 'owned') {
+          //console.log('domain: ' + words[0]);
+          retarry.push(words[0]);
+          }
         }
       }
     }
+  } else {
+    retarry.push("Ctrl-C, then cf api ; cf login");
   }
   return retarry;
 }
@@ -114,9 +133,12 @@ module.exports = class extends Generator {
       uaa_res_name: "app-uaa",
       uaa_svc_name: "APP_UAA"
     });
+
   }
 
   async prompting() {
+    var prompts = [];
+
     // Have Yeoman greet the user.
     this.log(
       yosay(`Welcome to the ${chalk.red("SAP\nPartner Engineering")} project generator!`)
@@ -159,34 +181,38 @@ module.exports = class extends Generator {
     });
 	  */
 
-    this.answers = await this.prompt([
-      {
-        type: "input",
-        name: "project_name",
-        message:
-          "Enter your project folder name (will be created if necessary).",
-        default: this.config.get("project_name") // Default to current folder name
-      },
-      {
-        type: "input",
-        name: "app_name",
-        // prefix: "The value here will be used as a suggetion.\n",
-        message: "Enter your project application name (will be used for defaults).",
-        default: this.config.get("app_name") // Default to current folder name
-      },
-      {
-        type: "input",
-        name: "app_desc",
-        message: "Enter your project application description.",
-        default: this.config.get("app_desc") // Default to current folder name
-      },
-      {
-        type: "input",
-        name: "router_name",
-        message: "Application router internal module name.",
-        default: suggest_router_name
-      },
-      {
+    prompts.push({
+      type: "input",
+      name: "project_name",
+      message:
+        "Enter your project folder name (will be created if necessary).",
+      default: this.config.get("project_name") // Default to current folder name
+    });
+
+    prompts.push({
+      type: "input",
+      name: "app_name",
+      // prefix: "The value here will be used as a suggetion.\n",
+      message: "Enter your project application name (will be used for defaults).",
+      default: this.config.get("app_name") // Default to current folder name
+    });
+      
+    prompts.push({
+      type: "input",
+      name: "app_desc",
+      message: "Enter your project application description.",
+      default: this.config.get("app_desc") // Default to current folder name
+    });
+      
+    prompts.push({
+      type: "input",
+      name: "router_name",
+      message: "Application router internal module name.",
+      default: suggest_router_name
+    });
+    
+    if (cf_is_logged_in()) {
+      prompts.push({
         type: "list",
         name: "domain_name",
         prefix: "This list of domain names is based on the current 'cf domains' command.\n",
@@ -194,38 +220,56 @@ module.exports = class extends Generator {
         // choices: ["cfapps.us10.hana.ondemand.com","conciletime.com"],
         choices: get_domains(),
         default: suggest_domain_name
-      },
-      {
-        type: "input",
-        name: "router_path",
-        message: "Application router path",
-        default: this.config.get("router_path")
-      },
-      {
-        type: "input",
-        name: "database_path",
-        message: "Domain/Database model path",
-        default: this.config.get("database_path")
-      },
-      {
-        type: "input",
-        name: "services_path",
-        message: "Services definition path",
-        default: this.config.get("services_path")
-      },
-      {
-        type: "input",
-        name: "uaa_res_name",
-        message: "UAA resource name",
-        default: suggest_uaa_res_name
-      },
-      {
-        type: "input",
-        name: "uaa_svc_name",
-        message: "UAA service name",
-        default: suggest_uaa_svc_name
-      }
-    ]);
+      });
+    }
+      
+    if (!cf_is_logged_in()) {
+      prompts.push({
+          type: "input",
+          name: "domain_name",
+          prefix: "Enter domain name or abort and login with 'cf login' command.\n",
+          message: "Domain name.",
+          default: "cfapps.us10.hana.ondemand.com",
+      });
+    }
+      
+    prompts.push({
+      type: "input",
+      name: "router_path",
+      message: "Application router path",
+      default: this.config.get("router_path")
+    });
+      
+    prompts.push({
+      type: "input",
+      name: "database_path",
+      message: "Domain/Database model path",
+      default: this.config.get("database_path")
+    });
+      
+    prompts.push({
+      type: "input",
+      name: "services_path",
+      message: "Services definition path",
+      default: this.config.get("services_path")
+    });
+      
+    prompts.push({
+      type: "input",
+      name: "uaa_res_name",
+      message: "UAA resource name",
+      default: suggest_uaa_res_name
+    });
+      
+    prompts.push({
+      type: "input",
+      name: "uaa_svc_name",
+      message: "UAA service name",
+      default: suggest_uaa_svc_name
+    });
+      
+    this.answers = await this.prompt(prompts);
+
   }
 
   default() {
@@ -382,6 +426,8 @@ module.exports = class extends Generator {
     this.log(`Build+Deploy : "cd ${this.answers.project_name} ; mkdir -p mta_archives ; mbt build -p=cf -t=mta_archives --mtar=${this.answers.project_name}.mtar ; cf deploy mta_archives/${this.answers.project_name}.mtar -f"`);
     this.log(`UnDeploy : "cf undeploy ${this.answers.app_name} -f --delete-services"`);
     this.log(`Change into it with "cd ${this.answers.project_name}"`);
-    this.log(JSON.stringify(get_domains()));
+    if (cf_is_logged_in()) {
+      this.log(JSON.stringify(get_domains()));
+    }
   }
 };
