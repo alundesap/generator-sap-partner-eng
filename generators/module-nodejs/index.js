@@ -650,11 +650,11 @@ module.exports = class extends Generator {
     //this.log(":" + subs.hdi_res_name + ":");
 
     this.fs.copy(
-      this.templatePath("nodejs/.eslintrc"),
+      this.templatePath("nodejs/eslintrc"),
       this.destinationPath(this.answers.module_path + "/.eslintrc")
     );
     this.fs.copy(
-      this.templatePath("nodejs/.eslintrc.ext"),
+      this.templatePath("nodejs/eslintrc.ext"),
       this.destinationPath(this.answers.module_path + "/.eslintrc.ext")
     );
     // this.fs.copy(

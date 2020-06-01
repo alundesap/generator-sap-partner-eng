@@ -231,7 +231,7 @@ module.exports = class extends Generator {
       prompts.push({
           type: "input",
           name: "domain_name",
-          prefix: "Enter domain name or abort and login with 'cf login' command.\n",
+          prefix: "Enter domain name or abort and login with 'cf login' then 'cf target' commands.\n",
           message: "Domain name.",
           default: "cfapps.us10.hana.ondemand.com",
       });
@@ -335,22 +335,22 @@ module.exports = class extends Generator {
     //);
 
     this.fs.copy(
-      this.templatePath(".cdsrc.json"),
+      this.templatePath("cdsrc.json"),
       this.destinationPath(".cdsrc.json")
     );
 
     this.fs.copy(
-      this.templatePath(".gitignore"),
+      this.templatePath("gitignore"),
       this.destinationPath(".gitignore")
     );
 
     this.fs.copy(
-      this.templatePath(".eslintrc"),
+      this.templatePath("eslintrc"),
       this.destinationPath(".eslintrc")
     );
 
     this.fs.copy(
-      this.templatePath(".vscode/*"),
+      this.templatePath("vscode/*"),
       this.destinationPath(".vscode")
     );
 
