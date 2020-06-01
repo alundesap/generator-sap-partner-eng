@@ -81,11 +81,13 @@
         }
       },
       "files": [
+        "app",
         "db",
         "srv",
-	"cdsrc.json",
-	"eslintrc",
-	"gitignore",
-	"vscode"
+	      "cdsrc.json",
+	      "eslintrc",
+	      "gitignore",
+        "vscode",
+        "mta.yaml"
       ]
     }
