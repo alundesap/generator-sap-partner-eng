@@ -39,7 +39,7 @@ function get_domains() {
   var retarry = [];
 
   // retarry.push('domain.com');
- 
+  
   var result = exec('cf domains');
 
   if (result) {
