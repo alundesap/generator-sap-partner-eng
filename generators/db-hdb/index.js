@@ -25,7 +25,9 @@ module.exports = class extends Generator {
       database_path: "db",
       db_schema_name: the_app_name.toUpperCase() + "_DB",
       hdi_res_name: the_app_name + "-hdi",
-      hdi_svc_name: the_app_name.toUpperCase() + "_HDI"
+      hdi_svc_name: the_app_name.toUpperCase() + "_HDI",
+      sampledata_provided: false,
+      hanacloud_compatible: true
     });
   }
 
@@ -90,11 +92,42 @@ module.exports = class extends Generator {
       default: this.config.get("hdi_svc_name")
     });
 
+    prompts.push({
+      type: "confirm",
+      name: "sampledata_provided",
+      message: "Would you like a sample table/view in the HDI container?",
+      default: this.config.get("sampledata_provided")
+    });
+
+    prompts.push({
+      type: "confirm",
+      name: "hanacloud_compatible",
+      message: "HANACloud(hdbtable) compatible? = Y, else HDBCDS style? = N",
+      default: this.config.get("hanacloud_compatible"),
+      when: function(so_far) {
+        var retval = false;
+        if (so_far.sampledata_provided) {
+          retval = true;
+        } else {
+          retval = false;
+        }
+
+        return retval;
+      }
+    });
+
     this.answers = await this.prompt(prompts);
 
     if (typeof this.config.get("app_name") !== "undefined") {
       this.answers.app_name = this.config.get("app_name");
     }
+
+    if (typeof this.config.get("domain_name") !== "undefined") {
+      this.answers.domain_name = this.config.get("domain_name");
+      this.log("Using domain_name: " + this.answers.domain_name);
+    }
+
+
   }
 
   writing() {
@@ -104,6 +137,18 @@ module.exports = class extends Generator {
     this.config.set("hdi_res_name", this.answers.hdi_res_name);
     this.config.set("hdi_svc_name", this.answers.hdi_svc_name);
 
+    if (typeof this.answers.sampledata_provided !== "undefined") {
+      this.config.set("sampledata_provided", this.answers.sampledata_provided);
+
+      if (this.answers.sampledata_provided) {
+        this.config.set("sampledata_provided", this.answers.sampledata_provided);
+        this.config.set("hanacloud_compatible", this.answers.hanacloud_compatible);
+      } else {
+        this.config.delete("sampledata_provided");
+        this.config.delete("hanacloud_compatible");
+      }
+    }
+
     this.config.save();
 
     var subs = {
@@ -112,7 +157,8 @@ module.exports = class extends Generator {
       database_path: this.answers.database_path,
       db_schema_name: this.answers.db_schema_name,
       hdi_res_name: this.answers.hdi_res_name,
-      hdi_svc_name: this.answers.hdi_svc_name
+      hdi_svc_name: this.answers.hdi_svc_name,
+      domain_name: this.answers.domain_name
     };
 
     this.fs.copy(
@@ -152,33 +198,52 @@ module.exports = class extends Generator {
       this.templatePath("db/src/data/.hdinamespace"),
       this.destinationPath(this.answers.database_path + "/src/data/.hdinamespace")
     );
-    this.fs.copy(
-      this.templatePath("db/src/data/sensors.hdbcds"),
-      this.destinationPath(this.answers.database_path + "/src/data/sensors.hdbcds")
-    );
+
+    if (this.answers.sampledata_provided) {
+      if (this.answers.hanacloud_compatible) {
+        this.fs.copy(
+          this.templatePath("db/src/data/sensors_temp.hdbtable"),
+          this.destinationPath(this.answers.database_path + "/src/data/sensors_temp.hdbtable")
+        );
+
+        this.fs.copy(
+          this.templatePath("db/src/data/sensors_tempNoTimestamp.hdbview"),
+          this.destinationPath(this.answers.database_path + "/src/data/sensors_tempNoTimestamp.hdbview")
+        );
+
+      } else {
+        this.fs.copy(
+          this.templatePath("db/src/data/sensors.hdbcds"),
+          this.destinationPath(this.answers.database_path + "/src/data/sensors.hdbcds")
+        );
+      }
+
+      this.fs.copy(
+        this.templatePath("db/src/data/temp.csv"),
+        this.destinationPath(this.answers.database_path + "/src/data/temp.csv")
+      );
+      this.fs.copy(
+        this.templatePath("db/src/data/temp.hdbtabledata"),
+        this.destinationPath(this.answers.database_path + "/src/data/temp.hdbtabledata")
+      );
+      this.fs.copy(
+        this.templatePath("db/src/data/tempId.hdbsequence"),
+        this.destinationPath(this.answers.database_path + "/src/data/tempId.hdbsequence")
+      );
+
+      this.fs.copy(
+        this.templatePath("db/src/views/temps.hdbcalculationview"),
+        this.destinationPath(
+          this.answers.database_path + "/src/views/temps.hdbcalculationview"
+        )
+      );
+    }
+
     this.fs.copy(
       this.templatePath("db/src/data/sys.hdbsynonym"),
       this.destinationPath(this.answers.database_path + "/src/data/sys.hdbsynonym")
     );
-    this.fs.copy(
-      this.templatePath("db/src/data/temp.csv"),
-      this.destinationPath(this.answers.database_path + "/src/data/temp.csv")
-    );
-    this.fs.copy(
-      this.templatePath("db/src/data/temp.hdbtabledata"),
-      this.destinationPath(this.answers.database_path + "/src/data/temp.hdbtabledata")
-    );
-    this.fs.copy(
-      this.templatePath("db/src/data/tempId.hdbsequence"),
-      this.destinationPath(this.answers.database_path + "/src/data/tempId.hdbsequence")
-    );
-
-    this.fs.copy(
-      this.templatePath("db/src/views/temps.hdbcalculationview"),
-      this.destinationPath(
-        this.answers.database_path + "/src/views/temps.hdbcalculationview"
-      )
-    );
+ 
 
     this.fs.copy(
       this.destinationPath("mta.yaml"),
@@ -205,12 +270,15 @@ module.exports = class extends Generator {
 
               var ins = "";
               ins += "\n\n";
+              ins += indent + "# cf push <?= database_name ?> -p <?= database_path ?> -k 512M -m 512M -u none ; sleep 60 ; cf stop <?= database_name ?>" + "\n";
               ins += indent + " - name: <?= database_name ?>" + "\n";
               ins += indent + "   type: hdb" + "\n";
               ins += indent + "   path: <?= database_path ?>" + "\n";
               ins += indent + "   parameters:" + "\n";
               ins += indent + "      memory: 512M" + "\n";
               ins += indent + "      disk-quota: 512M" + "\n";
+              ins += indent + "      #host: ${org}-${space}-<?= database_name ?>" + "\n";
+              ins += indent + "      #domain: <?= domain_name ?>" + "\n";
               ins += indent + "   requires:" + "\n";
               ins += indent + "    - name: <?= hdi_res_name ?>";
 
