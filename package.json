@@ -1,6 +1,6 @@
 {
   "name": "generator-sap-partner-eng",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Project/Module Generator for SAP Partner Engineering Guided Projects",
   "homepage": "https://github.com/andrewlunde/generator-sap-partner-eng",
   "author": {
