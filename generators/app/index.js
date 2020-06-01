@@ -22,11 +22,12 @@ const exec = require("child_process").execSync;
 
 function cf_is_logged_in() {
   var result = exec('cf api');
-  var resStr = result.toString('utf-8');
-  if (resStr.search("No API endpoint set.") >= 0) {
+  var resStr = result.toString("utf8");
+  resStr = resStr.toLowerCase();
+  if (resStr.search("no api endpoint set.") >= 0) {
     return false;
   } else {
-    if (resStr.search("Not logged in.") >= 0) {
+    if (resStr.search("not logged in.") >= 0) {
       return false;
     } else {
       return true;
@@ -40,28 +41,30 @@ function get_domains() {
 
   // retarry.push('domain.com');
   
-  var result = exec('cf domains');
+  if (cf_is_logged_in()) {
+    var result = exec('cf domains');
 
-  if (result) {
-    var output = result.toString("utf8");
+    if (result) {
+      var output = result.toString("utf8");
 
-      var lines = String(output).split("\n");
-      var line = "";
-      var first = true;
-      for (var i = 1; i <= lines.length; i++) {
-        line = lines[i - 1];
-        //console.log(`line: ${line}`);
-        var words = String(line.replace(/\s+/g, ' ')).split(" ");
-        if ((words[1] == 'shared') || (words[1] == 'owned')) {
-        if (first) {
-          // console.log('domain: ' + words[0]);
-          retarry.push(words[0]);
-          first = false;
-        }
-        else {
-        if (words[1] == 'owned') {
-          //console.log('domain: ' + words[0]);
-          retarry.push(words[0]);
+        var lines = String(output).split("\n");
+        var line = "";
+        var first = true;
+        for (var i = 1; i <= lines.length; i++) {
+          line = lines[i - 1];
+          //console.log(`line: ${line}`);
+          var words = String(line.replace(/\s+/g, ' ')).split(" ");
+          if ((words[1] == 'shared') || (words[1] == 'owned')) {
+          if (first) {
+            // console.log('domain: ' + words[0]);
+            retarry.push(words[0]);
+            first = false;
+          }
+          else {
+          if (words[1] == 'owned') {
+            //console.log('domain: ' + words[0]);
+            retarry.push(words[0]);
+            }
           }
         }
       }
@@ -69,6 +72,7 @@ function get_domains() {
   } else {
     retarry.push("Ctrl-C, then cf api ; cf login");
   }
+
   return retarry;
 }
 
