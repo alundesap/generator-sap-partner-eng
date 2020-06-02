@@ -1,25 +1,14 @@
 {
-  "name": "mta_cap-srv",
-  "description": "Generated from ../package.json, do not change!",
-  "version": "1.0.0",
-  "dependencies": {
-    "@sap/cds": "^3",
-    "express": "^4",
-    "hdb": "^0.17"
-  },
-  "devDependencies": {},
-  "scripts": {
-    "postinstall": "npm dedupe && node .build.js",
-    "start": "node ./node_modules/@sap/cds/bin/cds.js serve gen/csn.json",
-    "watch": "nodemon -w . -i node_modules/**,.git/** -e cds -x npm run build"
-  },
-  "private": true,
-  "cds": {
-    "requires": {
-      "db": {
-        "kind": "hana",
-        "model": "gen/csn.json"
-      }
-    }
-  }
+  "files": [
+    "CDS-MTX.md",
+    "build.js",
+    "cat-service-auth.cds",
+    "cat-service.cds",
+    "package.json",
+    "package.json.gen",
+    "package.json.mt",
+    "provisioning.js.mt",
+    "server.js",
+    "server.js.mt"
+  ]
 }

@@ -385,7 +385,7 @@ module.exports = class extends Generator {
     // );
 
     this.fs.copyTpl(
-      this.templatePath("db/.build.js"),
+      this.templatePath("db/build.js"),
       this.destinationPath(this.answers.database_path + "/.build.js"),
       subs
     );
@@ -397,7 +397,7 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.templatePath("db/package.json"),
+      this.templatePath("db/package.json.gen"),
       this.destinationPath(this.answers.database_path + "/package.json"),
       subs
     );
@@ -418,7 +418,7 @@ module.exports = class extends Generator {
     );
 
     this.fs.copyTpl(
-      this.templatePath("srv/.build.js"),
+      this.templatePath("srv/build.js"),
       this.destinationPath(this.answers.services_path + "/.build.js"),
       subs
     );
@@ -471,7 +471,7 @@ module.exports = class extends Generator {
       );
     } else {
       this.fs.copyTpl(
-        this.templatePath("srv/package.json"),
+        this.templatePath("srv/package.json.gen"),
         this.destinationPath(this.answers.services_path + "/package.json"),
         subs
       );

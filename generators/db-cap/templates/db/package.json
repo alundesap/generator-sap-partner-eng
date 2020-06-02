@@ -6,5 +6,12 @@
   "scripts": {
     "postinstall": "node .build.js",
     "start": "node node_modules/@sap/hdi-deploy/deploy.js"
-  }
+  },
+  "files": [
+    "build.js",
+    "csv",
+    "data-model.cds",
+    "package.json",
+    "src"
+  ]
 }

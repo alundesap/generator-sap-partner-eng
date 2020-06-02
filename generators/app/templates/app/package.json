@@ -9,5 +9,10 @@
   },
   "scripts": {
     "start": "node node_modules/@sap/approuter/approuter.js"
-  }
+  },
+  "files": [
+    "resources",
+    "package.json",
+    "xs-app.json"
+  ]
 }
