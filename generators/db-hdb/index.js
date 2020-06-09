@@ -12,12 +12,30 @@ const Generator = require("yeoman-generator");
 // const yosay = require("yosay");
 
 module.exports = class extends Generator {
+
+  constructor(args, opts) {
+    super(args, opts);
+
+    // This method adds support for a `--force` flag
+    this.option('force', {type: Boolean, default: false})
+
+    // And you can then access it later; e.g.
+    //this.scriptSuffix = this.options.force ? ".coffee" : ".js";
+  }
+
   initializing() {
     this.props = {};
     this.answers = {};
     var the_app_name = "";
     if (typeof this.config.get("app_name") !== "undefined") {
       the_app_name = this.config.get("app_name");
+    }
+
+    var existing_database_name = this.config.get("database_name");
+    if ((typeof existing_database_name !== "undefined") && (!this.options.force)) {
+      this.log("WARNING: yo sap-partner-eng:db-hdb or :db-cap has already been run once for " + the_app_name + ".  Use the --force option to override.");
+      // throw new Error("Aborting!");
+      process.exit(1);
     }
 
     this.config.defaults({
@@ -29,6 +47,7 @@ module.exports = class extends Generator {
       sampledata_provided: false,
       hanacloud_compatible: true
     });
+
   }
 
   async prompting() {

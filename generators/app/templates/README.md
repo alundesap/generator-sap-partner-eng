@@ -29,12 +29,17 @@ Learn more at https://cap.cloud.sap/docs/get-started/
 
 # Build Command:
 ```
-cd <%= project_name %> ; mkdir -p mta_archives ; mbt build -p=cf -t=mta_archives --mtar=<%= project_name %>.mtar
+cd <%= project_name %> ; mkdir -p mta_archives ; mbt build -p=cf -t=mta_archives --mtar=<%= app_name %>.mtar
 ```
 
 # Deploy Command:
 ```
-cf deploy mta_archives/<%= project_name %>.mtar -f
+cf deploy mta_archives/<%= app_name %>.mtar -f
+```
+
+# Subsequent Build+Deploy Commands:
+```
+mbt build -p=cf -t=mta_archives --mtar=<%= app_name %>.mtar ; cf deploy mta_archives/<%= app_name %>.mtar -f
 ```
 
 # Undeploy Command:

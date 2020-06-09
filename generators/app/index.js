@@ -123,6 +123,17 @@ function suggest_uaa_svc_name(so_far) {
 }
 
 module.exports = class extends Generator {
+
+  constructor(args, opts) {
+    super(args, opts);
+
+    // This method adds support for a `--no-mkdir` flag
+    this.option('mkdir', {type: Boolean, default: true})
+
+    // And you can then access it later; e.g.
+    //this.scriptSuffix = this.options.mkdir ? ".coffee" : ".js";
+  }
+
   initializing() {
     this.props = {};
     this.answers = {};
@@ -184,28 +195,32 @@ module.exports = class extends Generator {
       this.props = props;
     });
 	  */
-
-    prompts.push({
-      type: "input",
-      name: "project_name",
-      message:
-        "Enter your project folder name (will be created if necessary).",
-      default: this.config.get("project_name") // Default to current folder name
-    });
+    if (this.options.mkdir) {
+      prompts.push({
+        type: "input",
+        name: "project_name",
+        message:
+          "Enter your project folder name (will be created if necessary).",
+        default: this.config.get("project_name") // Default to current folder name
+      });
+    }
+    else {
+      this.log(`Option: --no--mkdir   WARNING: Files will be generated into the current directory.`);
+    }
 
     prompts.push({
       type: "input",
       name: "app_name",
       // prefix: "The value here will be used as a suggetion.\n",
       message: "Enter your project application name (will be used for defaults).",
-      default: this.config.get("app_name") // Default to current folder name
+      default: this.config.get("app_name")
     });
       
     prompts.push({
       type: "input",
       name: "app_desc",
       message: "Enter your project application description.",
-      default: this.config.get("app_desc") // Default to current folder name
+      default: this.config.get("app_desc") 
     });
       
     prompts.push({
@@ -277,11 +292,19 @@ module.exports = class extends Generator {
   }
 
   default() {
-    if (path.basename(this.destinationPath()) !== this.answers.project_name) {
+    // var path_basename = path.basename(this.destinationPath());
+    if (this.options.mkdir) {
       this.log(
         `Your project must be inside a folder named ${this.answers.project_name}\nI'll automatically create this folder.  Change into it with "cd ${this.answers.project_name}"`
       );
       mkdirp(this.answers.project_name);
+      this.destinationRoot(this.destinationPath(this.answers.project_name));
+    }
+    else {
+      this.answers.project_name = ".";
+      this.log(
+        `Your project will be generated in the current folder ${this.answers.project_name} and may modify existing files.`
+        );
       this.destinationRoot(this.destinationPath(this.answers.project_name));
     }
   }

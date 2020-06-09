@@ -18,12 +18,30 @@ var utils = require("../common/utils");
 global.globConfig = [];
 
 module.exports = class extends Generator {
+
+  constructor(args, opts) {
+    super(args, opts);
+
+    // This method adds support for a `--force` flag
+    this.option('force', {type: Boolean, default: false})
+
+    // And you can then access it later; e.g.
+    //this.scriptSuffix = this.options.force ? ".coffee" : ".js";
+  }
+
   initializing() {
     this.props = {};
     this.answers = {};
     var the_app_name = "";
     if (typeof this.config.get("app_name") !== "undefined") {
       the_app_name = this.config.get("app_name");
+    }
+
+    var existing_database_name = this.config.get("database_name");
+    if ((typeof existing_database_name !== "undefined") && (!this.options.force)) {
+      this.log("WARNING: yo sap-partner-eng:db-hdb or :db-cap has already been run once for " + the_app_name + ".  Use the --force option to override.");
+      // throw new Error("Aborting!");
+      process.exit(1);
     }
 
     this.config.defaults({
@@ -519,8 +537,8 @@ module.exports = class extends Generator {
               ins += indent + "   parameters:" + "\n";
               ins += indent + "      memory: 512M" + "\n";
               ins += indent + "      disk-quota: 512M" + "\n";
-              ins += indent + "      #host: ${org}-${space}-<?= database_name ?>" + "\n";
-              ins += indent + "      #domain: <?= domain_name ?>" + "\n";
+              // ins += indent + "      #host: ${org}-${space}-<?= database_name ?>" + "\n";
+              // ins += indent + "      #domain: <?= domain_name ?>" + "\n";
               ins += indent + "   requires:" + "\n";
               ins += indent + "    - name: <?= hdi_res_name ?>";
 
@@ -531,6 +549,9 @@ module.exports = class extends Generator {
               ins += indent + "   build-parameters:" + "\n";
               ins += indent + "      ignore: [\"node_modules/\"]" + "\n";
               ins += indent + "   path: <?= services_path ?>" + "\n";
+              ins += indent + "   properties:" + "\n";
+              ins += indent + "      EXIT: 1  # required by deploy.js task to terminate" + "\n";
+              ins += indent + "      SAP_JWT_TRUST_ACL: [{\"clientid\":\"*\",\"identityzone\":\"sap-provisioning\"}]  # Trust between server and SaaS Manager" + "\n";
               ins += indent + "   parameters:" + "\n";
               ins += indent + "      memory: 512M" + "\n";
               ins += indent + "      disk-quota: 512M" + "\n";
@@ -647,7 +668,7 @@ module.exports = class extends Generator {
                 ins += indent + "         description: '<?= app_name ?> Multitenant App'" + "\n";
                 ins += indent + "         category: '<?= app_name ?> Category'" + "\n";
                 ins += indent + "         appUrls:" + "\n";
-                ins += indent + "            onSubscription: https://${org}-${space}-<?= router_name ?>.<?= domain_name ?>/mtx/v1/provisioning/tenant/{tenantId}" + "\n";
+                ins += indent + "            onSubscription: https://${org}-${space}-<?= services_name ?>.<?= domain_name ?>/mtx/v1/provisioning/tenant/{tenantId}" + "\n";
   
                 ins += "\n";
 

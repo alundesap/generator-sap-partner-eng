@@ -20,6 +20,16 @@ global.globConfig = [];
 
 module.exports = class extends Generator {
 
+  constructor(args, opts) {
+    super(args, opts);
+
+    // This method adds support for a `--force` flag
+    this.option('force', {type: Boolean, default: false})
+
+    // And you can then access it later; e.g.
+    //this.scriptSuffix = this.options.force ? ".coffee" : ".js";
+  }
+
   initializing() {
     this.props = {};
     this.answers = {};
@@ -119,6 +129,8 @@ module.exports = class extends Generator {
       } while (found);
     }
 
+    var already_multitenant_enabled = this.config.get("multitenant_enabled");
+    
     this.config.defaults({
       module_name: suggested_name,
       module_path: suggested_path,
@@ -412,79 +424,83 @@ module.exports = class extends Generator {
 
     });
 
-    prompts.push({
-      type: "confirm",
-      name: "multitenant_enabled",
-      message: "Use this NodeJS module to handle multitenant subscription requests?",
-      default: this.config.get("multitenant_enabled")
-      // when: function () {
-      //   var retval = false;
-      //   var enabled = globConfig.get("multitenant_enabled");
-      //   if (enabled) {
-      //     retval = false;
-      //   }
-      //   else {
-      //     retval = true;
-      //   }
-      //   return retval;
-      // }
-    });
+    var enabled = globConfig.get("multitenant_enabled");
 
-    prompts.push({
-      type: "input",
-      name: "reg_res_name",
-      message: "Registry Resource Name.",
-      default: this.config.get("reg_res_name"),
-      // validate: function (input) {
-      //   // Declare function as asynchronous, and save the done callback
-      //   var done = this.async();
-    
-      //   // Do async stuff
-      //   setTimeout(function() {
-          
-      //     var names = globConfig.get("module_names");
-      //     var typeModName = typeof names;
+    if (!enabled) {
+      prompts.push({
+        type: "confirm",
+        name: "multitenant_enabled",
+        message: "Use this NodeJS module to handle multitenant subscription requests?",
+        default: this.config.get("multitenant_enabled")
+        // when: function () {
+        //   var retval = false;
+        //   var enabled = globConfig.get("multitenant_enabled");
+        //   if (enabled) {
+        //     retval = false;
+        //   }
+        //   else {
+        //     retval = true;
+        //   }
+        //   return retval;
+        // }
+      });
 
-      //     if (typeModName === "undefined") {
-      //       done(null, true);
-      //     }
-      //     else if (input === globConfig.get("app_name")) {
-      //       done('Already used as application name');
-      //       return;
-      //     }
-      //     else if (input === globConfig.get("router_name")) {
-      //       done('Already used as approuter name');
-      //       return;
-      //     }
-      //     else if (input === globConfig.get("router_path")) {
-      //       done('Already used as approuter path');
-      //       return;
-      //     }
-      //     else if (typeModName === "object") {
-      //       for( var i = 0; i < names.length; i++) {
-      //         var existing_name = names[i];
-      //         if (input == existing_name) {
-      //           done('Already used');
-      //           return;
-      //         }
-      //       }
-      //     }
-      //    // Pass the return value in the done callback
-      //     done(null, true);
-      //   }, 500);
-      // },
-      when: function(so_far) {
-        var retval = false;
-        //var enabled = globConfig.get("multitenant_enabled");
-        if (so_far.multitenant_enabled) {
-          retval = true;
-        } else {
-          retval = false;
+      // multitenant_enabled
+      prompts.push({
+        type: "input",
+        name: "reg_res_name",
+        message: "Registry Resource Name.",
+        default: this.config.get("reg_res_name"),
+        // validate: function (input) {
+        //   // Declare function as asynchronous, and save the done callback
+        //   var done = this.async();
+      
+        //   // Do async stuff
+        //   setTimeout(function() {
+            
+        //     var names = globConfig.get("module_names");
+        //     var typeModName = typeof names;
+
+        //     if (typeModName === "undefined") {
+        //       done(null, true);
+        //     }
+        //     else if (input === globConfig.get("app_name")) {
+        //       done('Already used as application name');
+        //       return;
+        //     }
+        //     else if (input === globConfig.get("router_name")) {
+        //       done('Already used as approuter name');
+        //       return;
+        //     }
+        //     else if (input === globConfig.get("router_path")) {
+        //       done('Already used as approuter path');
+        //       return;
+        //     }
+        //     else if (typeModName === "object") {
+        //       for( var i = 0; i < names.length; i++) {
+        //         var existing_name = names[i];
+        //         if (input == existing_name) {
+        //           done('Already used');
+        //           return;
+        //         }
+        //       }
+        //     }
+        //    // Pass the return value in the done callback
+        //     done(null, true);
+        //   }, 500);
+        // },
+        when: function(so_far) {
+          var retval = false;
+          //var enabled = globConfig.get("multitenant_enabled");
+          if (so_far.multitenant_enabled) {
+            retval = true;
+          } else {
+            retval = false;
+          }
+
+          return retval;
         }
-
-        return retval;
-      }
-    });
+      });
 
       prompts.push({
         type: "input",
@@ -542,7 +558,7 @@ module.exports = class extends Generator {
         }
   
       });
-
+    }
 
     this.answers = await this.prompt(prompts);
 
@@ -619,6 +635,7 @@ module.exports = class extends Generator {
         this.config.set("multitenant_module", this.answers.module_name);
         this.config.set("reg_res_name", this.answers.reg_res_name);
         this.config.set("reg_svc_name", this.answers.reg_svc_name);
+        globConfig.set("ins_multitenant",true);
       } else {
         this.config.delete("reg_res_name");
         this.config.delete("reg_svc_name");
@@ -703,7 +720,14 @@ module.exports = class extends Generator {
           var indent = "";
           var ins = "";
 
-          var enabled = globConfig.get("multitenant_enabled");
+          var inserting = globConfig.get("ins_multitenant");
+          var enabled = false;
+
+          if (typeof inserting !== "undefined") {
+            if (inserting) {
+              enabled = true;
+            }
+          }
 
           for (var i = 1; i <= lines.length; i++) {
             line = lines[i - 1];
@@ -810,30 +834,31 @@ module.exports = class extends Generator {
 // #      category: 'sub Category'
 // #      appUrls:
 // #         onSubscription: https://sub-srv-${space}.cfapps.us10.hana.ondemand.com/mtx/v1/provisioning/tenant/{tenantId}
+              if (enabled) {
+                ins = "";
+                ins += "\n";
+                ins += "\n";
 
-              ins = "";
-              ins += "\n";
-              ins += "\n";
+                ins += indent + "# Multitenant Registration(using CAP-MTX style url)" + "\n";
+                ins += indent + " - name: <?= reg_res_name ?>" + "\n";
+                ins += indent + "   type: org.cloudfoundry.managed-service" + "\n";
+                ins += indent + "   requires:" + "\n";
+                ins += indent + "    - name: <?= uaa_res_name ?>" + "\n";
+                ins += indent + "   parameters:" + "\n";
+                ins += indent + "      service: saas-registry" + "\n";
+                ins += indent + "      service-plan: application" + "\n";
+                ins += indent + "      service-name: <?= reg_svc_name ?>" + "\n";
+                ins += indent + "      config:" + "\n";
+                ins += indent + "         xsappname: ~{<?= uaa_res_name ?>/XSAPPNAME}" + "\n";
+                ins += indent + "         appName: <?= app_name ?>" + "\n";
+                ins += indent + "         displayName: <?= app_name ?>" + "\n";
+                ins += indent + "         description: '<?= app_name ?> Multitenant App'" + "\n";
+                ins += indent + "         category: '<?= app_name ?> Category'" + "\n";
+                ins += indent + "         appUrls:" + "\n";
+                ins += indent + "            onSubscription: https://${org}-${space}-<?= module_name ?>.<?= domain_name ?>/mtx/v1/provisioning/tenant/{tenantId}" + "\n";
 
-              ins += indent + "# Multitenant Registration(using CAP-MTX style url)" + "\n";
-              ins += indent + " - name: <?= reg_res_name ?>" + "\n";
-              ins += indent + "   type: org.cloudfoundry.managed-service" + "\n";
-              ins += indent + "   requires:" + "\n";
-              ins += indent + "    - name: <?= uaa_res_name ?>" + "\n";
-              ins += indent + "   parameters:" + "\n";
-              ins += indent + "      service: saas-registry" + "\n";
-              ins += indent + "      service-plan: application" + "\n";
-              ins += indent + "      service-name: <?= reg_svc_name ?>" + "\n";
-              ins += indent + "      config:" + "\n";
-              ins += indent + "         xsappname: ~{<?= uaa_res_name ?>/XSAPPNAME}" + "\n";
-              ins += indent + "         appName: <?= app_name ?>" + "\n";
-              ins += indent + "         displayName: <?= app_name ?>" + "\n";
-              ins += indent + "         description: '<?= app_name ?> Multitenant App'" + "\n";
-              ins += indent + "         category: '<?= app_name ?> Category'" + "\n";
-              ins += indent + "         appUrls:" + "\n";
-              ins += indent + "            onSubscription: https://${org}-${space}-<?= module_name ?>.<?= domain_name ?>/mtx/v1/provisioning/tenant/{tenantId}" + "\n";
-
-              line += ins;
+                line += ins;
+              }
             }
 
             // Value replacements
@@ -1063,6 +1088,10 @@ module.exports = class extends Generator {
       subs,
       { delimiter: "?" }
     );
+
+    
+    this.config.delete("ins_multitenant");
+    this.config.save();
   }
 
   install() {
