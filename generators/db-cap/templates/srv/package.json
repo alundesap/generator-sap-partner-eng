@@ -9,6 +9,8 @@
     "package.json.mt",
     "provisioning.js.mt",
     "server.js",
-    "server.js.mt"
+    "server.js.mt",
+    "pom.xml",
+    "src"
   ]
 }
