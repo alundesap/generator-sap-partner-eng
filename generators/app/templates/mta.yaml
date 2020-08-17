@@ -10,12 +10,12 @@ parameters:
    enable-parallel-deployments: true
   
   
-#build-parameters:
-#  before-all:
-#   - builder: custom
-#     commands:
-#      - npm install
-#      - npx cds build
+build-parameters:
+  before-all:
+   - builder: custom
+     commands:
+      - npm install
+      - npx -p @sap/cds-dk cds build
 
 modules:
 
@@ -26,7 +26,11 @@ modules:
    type: html5
    path: <%= router_path %>
    build-parameters:
-      ignore: ["node_modules/"]
+      # Don't package the dependencies if you're running into EINTEGRITY issues
+      ignore: ["default-env.json","package-lock.json", "node_modules/"]
+      # Suppress the calling of npm install by listing no commands
+      builder: custom
+      commands: []
    parameters:
       #host: ${org}-${space}-<%= router_name %>
       #domain: <%= domain_name %>
@@ -96,33 +100,5 @@ resources:
          oauth2-configuration:
             redirect-uris: 
              - "http*://*.<%= domain_name %>/**"
-
-# CAP-MTX Managed HANA (Internal Service Manager)
-# - name: <%= app_name %>-mgd
-#   type: org.cloudfoundry.managed-service
-#   requires:
-#    - name: <%= app_name %>_services_api
-#   parameters:
-#      service-plan: hdi-shared
-#      service: managed-hana
-#      service-name: <%= app_name %>_MGD
-
-# CAP-MXT Registration
-# - name: <%= app_name %>-reg
-#   type: org.cloudfoundry.managed-service
-#   requires:
-#    - name: <%= app_name %>-uaa
-#   parameters:
-#    service: saas-registry
-#    service-plan: application
-#    service-name: <%= app_name %>_REG
-#    config:
-#      xsappname: ~{<%= app_name %>-uaa/XSAPPNAME}
-#      appName: <%= app_name %>
-#      displayName: <%= app_name %>
-#      description: '<%= app_name %> Multitenant App'
-#      category: '<%= app_name %> Category'
-#      appUrls:
-#         onSubscription: https://<%= app_name %>-srv-${space}.<%= domain_name %>/mtx/v1/provisioning/tenant/{tenantId}
 
 ### New Resources Here ###

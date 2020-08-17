@@ -1,0 +1,31 @@
+const cds = require('@sap/cds');
+
+module.exports = (service) => {
+
+  service.before ('UPDATE', 'tenant', async (req) => {
+
+    cds.mtx.getSaasUtil().setSubscriptionUrl(req, 'https://ct-sub0-dev-mtxsm-app.cfapps.us10.hana.ondemand.com');
+    console.log('[INFO ][BEFORE_UPDATE_TENANT] ' + 'added url to request');
+
+    console.log('[INFO ][BEFORE_UPDATE_TENANT] ' + JSON.stringify(req.data));
+    
+  });
+
+  function isAsync(context) {
+    const headers = context._.req.headers
+    const callbackUrl = headers['status_callback'];
+    return (!!callbackUrl);
+  }
+
+  service.on('UPDATE', 'tenant', async (req, next) => {
+      const res = await next();     // first call default implementation which is doing the HDI container creation
+      if (!isAsync(req)) {
+        let url = 'https://ct-sub0-dev-mtxsm-app.cfapps.us10.hana.ondemand.com';
+        console.log('[INFO ][ON_UPDATE_TENANT] ' + 'Application URL is ' + url);
+        return req.reply(url);
+      }
+      return res;
+    } );
+
+}
+

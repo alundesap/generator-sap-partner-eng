@@ -1,4 +1,4 @@
-package my.company;
+package <%= java_package %>;
 
 import java.util.ArrayList;
 import java.util.List;

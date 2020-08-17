@@ -24,6 +24,7 @@ module.exports = class extends Generator {
 
     // This method adds support for a `--force` flag
     this.option('force', {type: Boolean, default: false})
+    this.option('instance-manager', {type: Boolean, default: false})
 
     // And you can then access it later; e.g.
     //this.scriptSuffix = this.options.force ? ".coffee" : ".js";
@@ -52,16 +53,19 @@ module.exports = class extends Generator {
       hdi_svc_name: the_app_name.toUpperCase() + "_HDI",
       router_name: the_app_name + "-app",
       router_path: "app",
+      services_type: "nodejs",
+      java_package: "my.company",
       services_name: the_app_name + "-srv",
       services_path: "srv",
       services_api: the_app_name + "_svc_api",
       services_be: the_app_name + "_svc_be",
-      services_route: "catalog",
+      services_route: "catalog",  // odata/v4/CatalogService
+      tests_path: "integration-tests",
       multitenant_enabled: false,
       reg_res_name: the_app_name + "-reg",
       reg_svc_name: the_app_name.toUpperCase() + "_REG",
-      mgd_res_name: the_app_name + "-mgd",
-      mgd_svc_name: the_app_name.toUpperCase() + "_MGD"
+      mgd_res_name: the_app_name + "-smc",
+      mgd_svc_name: the_app_name.toUpperCase() + "_SMC"
     });
 
     globConfig = this.config;
@@ -154,6 +158,34 @@ module.exports = class extends Generator {
       default: this.config.get("hdi_res_name")
     });
 
+    // eslint-disable-next-line no-constant-condition
+    if (true) {
+      prompts.push({
+        type: "list",
+        name: "services_type",
+        prefix: "Implement the service module as nodejs/(java) module type.\n",
+        message: "Module type.",
+        choices: ["nodejs", "java"],
+        default: this.config.get("services_type")
+      });
+
+      prompts.push({
+        type: "input",
+        name: "java_package",
+        message: "Registry Resource Name.",
+        default: this.config.get("java_package"),
+        when: function(so_far) {
+          var retval = false;
+          if (so_far.services_type === "java") {
+            retval = true;
+          } else {
+            retval = false;
+          }
+          return retval;
+        }
+      });
+    }
+
     if (typeof this.config.get("services_path") === "undefined") {
       prompts.push({
         type: "input",
@@ -198,7 +230,29 @@ module.exports = class extends Generator {
       type: "input",
       name: "services_route",
       message: "Route path(after first /) that your module will handle",
-      default: this.config.get("services_route")
+      //default: this.config.get("services_route")
+      default: function(so_far) {
+        var retval = "catalog";
+        if (so_far.services_type === "java") {
+          retval = "odata/v4/CatalogService";
+        }
+        return retval;
+      }
+    });
+
+    prompts.push({
+      type: "input",
+      name: "tests_path",
+      message: "Path for java integration tests.",
+      default: this.config.get("tests_path"),
+      when: function(so_far) {
+        var retval = false;
+        if (so_far.services_type === "java") {
+          retval = true;
+        }
+
+        return retval;
+      }
     });
 
     prompts.push({
@@ -319,8 +373,19 @@ module.exports = class extends Generator {
       this.answers.services_name = this.config.get("services_name");
     }
 
+    if (typeof this.config.get("java_package") !== "undefined") {
+      this.answers.java_package = this.config.get("java_package");
+    }
+    else {
+      this.answers.java_package = "my.company";
+    }
+
     if (typeof this.config.get("services_path") !== "undefined") {
       this.answers.services_path = this.config.get("services_path");
+    }
+
+    if (typeof this.config.get("tests_path") !== "undefined") {
+      this.answers.tests_path = this.config.get("tests_path");
     }
 
     if (typeof this.config.get("domain_name") !== "undefined") {
@@ -341,10 +406,13 @@ module.exports = class extends Generator {
     this.config.set("hdi_res_name", this.answers.hdi_res_name);
     this.config.set("hdi_svc_name", this.answers.hdi_svc_name);
     this.config.set("services_name", this.answers.services_name);
+    this.config.set("services_type", this.answers.services_type);
+    this.config.set("java_package", this.answers.java_package);
     this.config.set("services_path", this.answers.services_path);
     this.config.set("services_api", this.answers.services_api);
     this.config.set("services_be", this.answers.services_be);
     this.config.set("services_route", this.answers.services_route);
+    this.config.set("tests_path", this.answers.tests_path);
     this.config.set("router_name", this.answers.router_name);
     this.config.set("router_path", this.answers.router_path);
 
@@ -365,8 +433,11 @@ module.exports = class extends Generator {
       }
     }
 
+    globConfig.set("services_type",this.answers.services_type);
+
     this.config.save();
 
+    var java_path = this.answers.java_package.replace(".", "/");
     var subs = {
       app_name: this.answers.app_name,
       router_name: this.answers.router_name,
@@ -376,10 +447,14 @@ module.exports = class extends Generator {
       hdi_res_name: this.answers.hdi_res_name,
       hdi_svc_name: this.answers.hdi_svc_name,
       services_name: this.answers.services_name,
+      services_type: this.answers.services_type,
+      java_package: this.answers.java_package,
+      java_path: java_path,
       services_path: this.answers.services_path,
       services_api: this.answers.services_api,
       services_be: this.answers.services_be,
       services_route: this.answers.services_route,
+      tests_path: this.answers.tests_path,
       domain_name: this.answers.domain_name,
       uaa_res_name: this.answers.uaa_res_name,
       reg_res_name: this.answers.reg_res_name,
@@ -453,46 +528,172 @@ module.exports = class extends Generator {
       subs
     );
 
-    this.fs.copyTpl(
-      this.templatePath("srv/CDS-MTX.md"),
-      this.destinationPath(this.answers.services_path + "/CDS-MTX.md"),
-      subs
-    );
-
-    if (this.answers.multitenant_enabled) {
+    if (this.answers.services_type === "nodejs") {
       this.fs.copyTpl(
-        this.templatePath("srv/server.js.mt"),
-        this.destinationPath(this.answers.services_path + "/server.js"),
+        this.templatePath("srv/CDS-MTX.md"),
+        this.destinationPath(this.answers.services_path + "/CDS-MTX.md"),
         subs
       );
+
+      if (this.answers.multitenant_enabled) {
+        this.fs.copyTpl(
+          this.templatePath("srv/server.js.mt"),
+          this.destinationPath(this.answers.services_path + "/server.js"),
+          subs
+        );
+      } else {
+        this.fs.copyTpl(
+          this.templatePath("srv/server.js"),
+          this.destinationPath(this.answers.services_path + "/server.js"),
+          subs
+        );
+      }
+
+      if (this.answers.multitenant_enabled) {
+        this.fs.copyTpl(
+          this.templatePath("srv/handlers/provisioning.js"),
+          this.destinationPath(this.answers.services_path + "/handlers/provisioning.js"),
+          subs
+        );
+      }
+
+      if (this.answers.multitenant_enabled) {
+        this.fs.copyTpl(
+          this.templatePath("srv/package.json.mt"),
+          this.destinationPath(this.answers.services_path + "/package.json"),
+          subs
+        );
+      } else {
+        this.fs.copyTpl(
+          this.templatePath("srv/package.json.gen"),
+          this.destinationPath(this.answers.services_path + "/package.json"),
+          subs
+        );
+      }
     } else {
       this.fs.copyTpl(
-        this.templatePath("srv/server.js"),
-        this.destinationPath(this.answers.services_path + "/server.js"),
+        this.templatePath("pom.xml"),
+        this.destinationPath("pom.xml"),
         subs
       );
-    }
 
-    if (this.answers.multitenant_enabled) {
       this.fs.copyTpl(
-        this.templatePath("srv/provisioning.js.mt"),
-        this.destinationPath(this.answers.services_path + "/provisioning.js_disabled"),
+        this.templatePath("srv/pom.xml"),
+        this.destinationPath(this.answers.services_path + "/pom.xml"),
         subs
       );
-    }
 
-    if (this.answers.multitenant_enabled) {
       this.fs.copyTpl(
-        this.templatePath("srv/package.json.mt"),
+        this.templatePath("srv/package.json.java"),
         this.destinationPath(this.answers.services_path + "/package.json"),
         subs
       );
-    } else {
+
       this.fs.copyTpl(
-        this.templatePath("srv/package.json.gen"),
-        this.destinationPath(this.answers.services_path + "/package.json"),
+        this.templatePath("srv/src/main/java/" + "my/company" + "/OrdersService.java"),
+        this.destinationPath(this.answers.services_path + "/src/main/java/" + java_path + "/OrdersService.java"),
         subs
       );
+
+      this.fs.copyTpl(
+        this.templatePath("srv/src/main/resources/application.properties"),
+        this.destinationPath(this.answers.services_path + "/src/main/resources/application.properties"),
+        subs
+      );
+
+      this.fs.copy(
+        this.templatePath("srv/src/main/resources/connection.properties"),
+        this.destinationPath(this.answers.services_path + "/src/main/resources/connection.properties")
+      );
+
+      this.fs.copy(
+        this.templatePath("srv/src/main/resources/edmx/dummyfile.txt"),
+        this.destinationPath(this.answers.services_path + "/src/main/resources/edmx/dummyfile.txt")
+      );
+
+      this.fs.copy(
+        this.templatePath("srv/src/main/resources/i18n/i18n.properties"),
+        this.destinationPath(this.answers.services_path + "/src/main/resources/i18n/i18n.properties")
+      );
+
+      this.fs.copy(
+        this.templatePath("srv/src/main/resources/log4j.properties"),
+        this.destinationPath(this.answers.services_path + "/src/main/resources/log4j.properties")
+      );
+
+      this.fs.copy(
+        this.templatePath("srv/src/main/webapp/META-INF/context.xml"),
+        this.destinationPath(this.answers.services_path + "/src/main/webapp/META-INF/context.xml")
+      );
+
+      this.fs.copyTpl(
+        this.templatePath("srv/src/main/webapp/META-INF/sap_java_buildpack/config/resource_configuration.yml"),
+        this.destinationPath(this.answers.services_path + "/src/main/webapp/META-INF/sap_java_buildpack/config/resource_configuration.yml"),
+        subs
+      );
+
+      this.fs.copy(
+        this.templatePath("srv/src/main/webapp/WEB-INF/resources.xml"),
+        this.destinationPath(this.answers.services_path + "/src/main/webapp/WEB-INF/resources.xml")
+      );
+
+      this.fs.copy(
+        this.templatePath("srv/src/main/webapp/WEB-INF/spring-security.xml"),
+        this.destinationPath(this.answers.services_path + "/src/main/webapp/WEB-INF/spring-security.xml")
+      );
+
+      this.fs.copy(
+        this.templatePath("srv/src/main/webapp/WEB-INF/web.xml"),
+        this.destinationPath(this.answers.services_path + "/src/main/webapp/WEB-INF/web.xml")
+      );
+
+      this.fs.copy(
+        this.templatePath("srv/src/test/java/" + "my/company" + "/dummyfile.txt"),
+        this.destinationPath(this.answers.services_path + "/src/test/java/" + java_path + "/dummyfile.txt")
+      );
+
+      this.fs.copyTpl(
+        this.templatePath("integration-tests/pom.xml"),
+        this.destinationPath(this.answers.tests_path + "/pom.xml"),
+        subs
+      );
+
+      this.fs.copyTpl(
+        this.templatePath("integration-tests/src/test/resources/arquillian.xml"),
+        this.destinationPath(this.answers.tests_path + "/src/test/resources/arquillian.xml"),
+        subs
+      );
+
+      this.fs.copyTpl(
+        this.templatePath("integration-tests/src/test/resources/resources.xml"),
+        this.destinationPath(this.answers.tests_path + "/src/test/resources/resources.xml"),
+        subs
+      );
+
+      this.fs.copyTpl(
+        this.templatePath("integration-tests/src/test/resources/spring-security.xml"),
+        this.destinationPath(this.answers.tests_path + "/src/test/resources/spring-security.xml"),
+        subs
+      );
+
+      this.fs.copyTpl(
+        this.templatePath("integration-tests/src/test/resources/web.xml"),
+        this.destinationPath(this.answers.tests_path + "/src/test/resources/web.xml"),
+        subs
+      );
+
+      this.fs.copyTpl(
+        this.templatePath("integration-tests/src/test/java/" + "my/company" + "/OrderServiceTest.java"),
+        this.destinationPath(this.answers.tests_path + "/src/test/java/" + java_path + "/OrderServiceTest.java"),
+        subs
+      );
+
+      this.fs.copyTpl(
+        this.templatePath("integration-tests/src/test/java/" + "my/company" + "/TestUtil.java"),
+        this.destinationPath(this.answers.tests_path + "/src/test/java/" + java_path + "/TestUtil.java"),
+        subs
+      );
+
     }
 
     // this.fs.copyTpl(
@@ -500,7 +701,7 @@ module.exports = class extends Generator {
     //   this.destinationPath("cds-security.json"),
     //   subs
     // );
-
+    //globConfig.set("ins_multitenant",true);
     this.fs.copy(
       this.destinationPath("mta.yaml"),
       this.destinationPath("mta.yaml"),
@@ -514,7 +715,8 @@ module.exports = class extends Generator {
           var ins = "";
 
           var enabled = globConfig.get("multitenant_enabled");
-
+          var services_type = globConfig.get("services_type");
+ 
           var lines = String(content).split("\n");
           for (var i = 1; i <= lines.length; i++) {
             var line = lines[i - 1];
@@ -533,7 +735,11 @@ module.exports = class extends Generator {
               ins += indent + "   type: hdb" + "\n";
               ins += indent + "   path: <?= database_path ?>" + "\n";
               ins += indent + "   build-parameters:" + "\n";
-              ins += indent + "      ignore: [\"node_modules/\"]" + "\n";
+              ins += indent + "      # Don't package the dependencies if you're running into EINTEGRITY issues" + "\n";
+              ins += indent + "      ignore: [\"default-env.json\",\"package-lock.json\", \"node_modules/\"]" + "\n";
+              ins += indent + "      # Suppress the calling of npm install by listing no commands" + "\n";
+              ins += indent + "      builder: custom" + "\n";
+              ins += indent + "      commands: []" + "\n";
               ins += indent + "   parameters:" + "\n";
               ins += indent + "      memory: 512M" + "\n";
               ins += indent + "      disk-quota: 512M" + "\n";
@@ -543,18 +749,39 @@ module.exports = class extends Generator {
               ins += indent + "    - name: <?= hdi_res_name ?>";
 
               ins += "\n\n";
-              ins += indent + "# cf push <?= services_name ?> -p <?= services_path ?> -n <?= services_name ?> -d <?= domain_name ?> -k 512M -m 512M" + "\n";
+              var mem_size = "512M";
+              var disk_size = "1024M";
+              if (services_type === "java") {
+                mem_size = "1024M";
+              }
+
+              ins += indent + "# cf push <?= services_name ?> -p <?= services_path ?> -n ${org}-${space}-<?= services_name ?> -d <?= domain_name ?> -k " + disk_size + " -m " + mem_size + "" + "\n";
               ins += indent + " - name: <?= services_name ?>" + "\n";
-              ins += indent + "   type: nodejs" + "\n";
-              ins += indent + "   build-parameters:" + "\n";
-              ins += indent + "      ignore: [\"node_modules/\"]" + "\n";
+              ins += indent + "   type: <?= services_type ?>" + "\n";
+              if (services_type === "nodejs") {
+                ins += indent + "   build-parameters:" + "\n";
+                ins += indent + "      # Don't package the dependencies if you're running into EINTEGRITY issues" + "\n";
+                ins += indent + "      ignore: [\"default-env.json\",\"package-lock.json\", \"node_modules/\"]" + "\n";
+                ins += indent + "      # Suppress the calling of npm install by listing no commands" + "\n";
+                ins += indent + "      builder: custom" + "\n";
+                ins += indent + "      commands: []" + "\n";
+                }
               ins += indent + "   path: <?= services_path ?>" + "\n";
-              ins += indent + "   properties:" + "\n";
-              ins += indent + "      EXIT: 1  # required by deploy.js task to terminate" + "\n";
-              ins += indent + "      SAP_JWT_TRUST_ACL: [{\"clientid\":\"*\",\"identityzone\":\"sap-provisioning\"}]  # Trust between server and SaaS Manager" + "\n";
+              if (services_type === "nodejs") {
+                ins += indent + "   properties:" + "\n";
+                ins += indent + "      LOG_LEVEL: debug" + "\n";
+                ins += indent + "      EXIT: 1  # required by deploy.js task to terminate" + "\n";
+                ins += indent + "      SAP_JWT_TRUST_ACL: [{\"clientid\":\"*\",\"identityzone\":\"sap-provisioning\"}]  # Trust between server and SaaS Manager" + "\n";
+                ins += indent + "      NODE_DEBUG: 'instance-manager'" + "\n";
+                ins += indent + "      # cf set-env mtxsm-srv CF_API_USER 'user@domain.com'" + "\n";
+                ins += indent + "      # cf set-env mtxsm-srv CF_API_PW 'xxxxxx'" + "\n";
+                ins += indent + "      # cf restage mtxsm-srv" + "\n";
+                ins += indent + "      CF_API_USER: user@domain.com" + "\n";
+                ins += indent + "      CF_API_PW: xxxxxx" + "\n";
+             }
               ins += indent + "   parameters:" + "\n";
-              ins += indent + "      memory: 512M" + "\n";
-              ins += indent + "      disk-quota: 512M" + "\n";
+              ins += indent + "      memory: " + mem_size + "" + "\n";
+              ins += indent + "      disk-quota: " + disk_size + "" + "\n";
               ins += indent + "      #host: ${org}-${space}-<?= services_name ?>" + "\n";
               ins += indent + "      #domain: <?= domain_name ?>" + "\n";
               ins += indent + "   provides:" + "\n";
@@ -564,6 +791,13 @@ module.exports = class extends Generator {
 
               ins += indent + "   requires:" + "\n";
               ins += indent + "    - name: <?= hdi_res_name ?>" + "\n";
+              if (services_type === "java") {
+                //JBP_CONFIG_RESOURCE_CONFIGURATION: '[tomcat/webapps/ROOT/META-INF/context.xml:
+                //  {"service_name_for_DefaultDB" : "~{hdi-container-name}"}]'
+                ins += indent + "      properties:" + "\n";
+                ins += indent + "         JBP_CONFIG_RESOURCE_CONFIGURATION: '[tomcat/webapps/ROOT/META-INF/context.xml:" + "\n";
+                ins += indent + "            {\"service_name_for_DefaultDB\" : \"<?= hdi_svc_name ?>\"}]'" + "\n";
+              }
               ins += indent + "    - name: <?= uaa_res_name ?>";
               if (enabled) {
                 ins += indent + "\n" + "    - name: <?= reg_res_name ?>";
@@ -646,13 +880,16 @@ module.exports = class extends Generator {
                 ins += indent + "   requires:" + "\n";
                 ins += indent + "    - name: <?= uaa_res_name ?>" + "\n";
                 ins += indent + "   parameters:" + "\n";
-                ins += indent + "      service: managed-hana" + "\n";
-                ins += indent + "      service-plan: hdi-shared" + "\n";
+                ins += indent + "      service: service-manager" + "\n";
+                ins += indent + "      service-plan: container" + "\n";
                 ins += indent + "      service-name: <?= mgd_svc_name ?>" + "\n";
+                ins += indent + "      polling_timeout_seconds: 240" + "\n";
 
                 ins += "\n";
 
                 ins += indent + "# Multitenant Registration(using CAP-MTX style url)" + "\n";
+                ins += indent + "# Manually add route after tenant subscription" + "\n";
+                ins += indent + "# cf map-route <?= router_name ?> <?= domain_name ?> --hostname xxxmtxsmsbi-dev-<?= router_name ?>" + "\n";
                 ins += indent + " - name: <?= reg_res_name ?>" + "\n";
                 ins += indent + "   type: org.cloudfoundry.managed-service" + "\n";
                 ins += indent + "   requires:" + "\n";
@@ -669,6 +906,9 @@ module.exports = class extends Generator {
                 ins += indent + "         category: '<?= app_name ?> Category'" + "\n";
                 ins += indent + "         appUrls:" + "\n";
                 ins += indent + "            onSubscription: https://${org}-${space}-<?= services_name ?>.<?= domain_name ?>/mtx/v1/provisioning/tenant/{tenantId}" + "\n";
+                ins += indent + "            onSubscriptionAsync: false" + "\n";
+                ins += indent + "            onUnSubscriptionAsync: false" + "\n";
+                ins += indent + "            #callbackTimeoutMillis: 300000" + "\n";
   
                 ins += "\n";
 

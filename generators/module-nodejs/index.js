@@ -268,10 +268,11 @@ module.exports = class extends Generator {
             done('Already used as database path');
             return;
           } 
-          else if (input === globConfig.get("services_path")) {
-            done('Already used as services path');
-            return;
-          } 
+          // Allow reuse of "srv" folder?
+          // else if (input === globConfig.get("services_path")) {
+          //   done('Already used as services path');
+          //   return;
+          // } 
           else if (typeModPath === "object") {
             for( var i = 0; i < paths.length; i++) {
               var existing_path = paths[i];
