@@ -146,9 +146,10 @@ module.exports = class extends Generator {
       type: "input",
       name: "db_schema_name",
       prefix:
-        "Leave this blank if you want the system to generate the schema name.\n",
+        "Leave this blank if you want the system to generate the schema name(blank for multitenancy).\n",
       message: "DB Schema Name.",
-      default: this.config.get("db_schema_name")
+      //default: this.config.get("db_schema_name")
+      default: ""
     });
 
     prompts.push({

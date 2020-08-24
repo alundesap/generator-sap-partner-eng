@@ -50,7 +50,7 @@ async function connectAPI() {
               // Get App Router Module's GUID
               let options3 = {
                   method: 'GET',
-                  url: appEnv.app.cf_api + '/v3/apps?organization_guids=' + appEnv.app.organization_id + '&space_guids=' + appEnv.app.space_id + '&names=' + '<?= router_name ?>',
+                  url: appEnv.app.cf_api + '/v3/apps?organization_guids=' + appEnv.app.organization_id + '&space_guids=' + appEnv.app.space_id + '&names=' + '<%= router_name %>',
                   headers: {
                       'Authorization': 'Bearer ' + res2.data.access_token
                   }
@@ -190,7 +190,7 @@ async function deleteRoute(tenantID, connectRes) {
                 // Get routeID with name subdomain-dev-mtxsm-app
                 let options2 = {
                     method: 'GET',
-                    url: appEnv.app.cf_api + '/v3/apps/' + connectRes.application_id + '/routes?hosts=' + subdomain + '-' + appEnv.app.space_name + '-<?= router_name ?>',
+                    url: appEnv.app.cf_api + '/v3/apps/' + connectRes.application_id + '/routes?hosts=' + subdomain + '-' + appEnv.app.space_name + '-<%= router_name %>',
                     headers: {
                         'Authorization': 'Bearer ' + connectRes.access_token
                     }
@@ -240,7 +240,7 @@ module.exports = (service) => {
 
     // assume app router name is same as saas-registry app name & ensure in lowercase & all _ converted to -
     //let tenant = req.data.subscribedSubdomain + '-' + appEnv.app.space_name.toLowerCase().replace(/_/g,'-') + '-' + services.registry.appName.toLowerCase().replace(/_/g,'-');
-    let tenant = req.data.subscribedSubdomain + '-' + appEnv.app.space_name.toLowerCase().replace(/_/g,'-') + '-' + '<?= router_name ?>';
+    let tenant = req.data.subscribedSubdomain + '-' + appEnv.app.space_name.toLowerCase().replace(/_/g,'-') + '-' + '<%= router_name %>';
     //let tenantHost = tenant + '-app';
     let tenantHost = tenant;
     let tenantURL = 'https:\/\/' + tenantHost + /\.(.*)/gm.exec(appEnv.app.application_uris[0])[0];
