@@ -1,6 +1,7 @@
 {
   "files": [
     "db",
-    "srv"
+    "srv",
+    "CF_CREDS.txt"
   ]
 }
