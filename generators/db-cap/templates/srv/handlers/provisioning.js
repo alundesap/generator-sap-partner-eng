@@ -11,6 +11,7 @@ const appEnv = cfenv.getAppEnv();
 const xsenv = require('@sap/xsenv');
 const services = xsenv.getServices({
   uaa: { tag: 'xsuaa' },
+  registry: { tag: 'SaaS' }
 });
 
 console.log("services:" + JSON.stringify(services, null, 2));
@@ -190,7 +191,7 @@ async function deleteRoute(tenantID, connectRes) {
                 // Get routeID with name subdomain-dev-mtxsm-app
                 let options2 = {
                     method: 'GET',
-                    url: appEnv.app.cf_api + '/v3/apps/' + connectRes.application_id + '/routes?hosts=' + subdomain + '-' + appEnv.app.space_name + '-<%= router_name %>',
+                    url: appEnv.app.cf_api + '/v3/apps/' + connectRes.application_id + '/routes?hosts=' + subdomain + '-' + appEnv.app.space_name + '-' + '<%= router_name %>',
                     headers: {
                         'Authorization': 'Bearer ' + connectRes.access_token
                     }

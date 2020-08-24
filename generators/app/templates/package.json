@@ -108,6 +108,7 @@
     "eslintrc",
     "gitignore",
     "vscode",
-    "mta.yaml"
+    "mta.yaml",
+    "CF_CREDS.txt"
   ]
 }

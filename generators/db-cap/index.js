@@ -571,6 +571,14 @@ module.exports = class extends Generator {
           subs
         );
       }
+
+      if (this.answers.multitenant_enabled) {
+        this.fs.copyTpl(
+          this.templatePath("CF_CREDS.txt"),
+          this.destinationPath("CF_CREDS.txt"),
+          subs
+        );
+      }
     } else {
       this.fs.copyTpl(
         this.templatePath("pom.xml"),
