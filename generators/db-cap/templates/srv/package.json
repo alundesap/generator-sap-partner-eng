@@ -11,6 +11,7 @@
     "server.js",
     "server.js.mt",
     "pom.xml",
-    "src"
+    "src",
+    "handlers"
   ]
 }
