@@ -893,6 +893,9 @@ module.exports = class extends Generator {
                 ins += indent + "      service-plan: container" + "\n";
                 ins += indent + "      service-name: <?= mgd_svc_name ?>" + "\n";
                 ins += indent + "      polling_timeout_seconds: 240" + "\n";
+                ins += indent + "      config" + "\n";
+                ins += indent + "         acquireTimeoutMillis: max" + "\n";
+                ins += indent + "         polling_timeout_seconds: 480" + "\n";
 
                 ins += "\n";
 
@@ -909,6 +912,8 @@ module.exports = class extends Generator {
                 ins += indent + "      service-name: <?= reg_svc_name ?>" + "\n";
                 ins += indent + "      config:" + "\n";
                 ins += indent + "         xsappname: ~{<?= uaa_res_name ?>/XSAPPNAME}" + "\n";
+                ins += indent + "         # WARNING: If you change the appName here or if your org name is different from your subdomain name," + "\n";
+                ins += indent + "         #          check that the subscription url in srv/handlers/provisioning.js: matches the url assigned to your app module." + "\n";
                 ins += indent + "         appName: <?= app_name ?>" + "\n";
                 ins += indent + "         displayName: <?= app_name ?>" + "\n";
                 ins += indent + "         description: '<?= app_name ?> Multitenant App'" + "\n";

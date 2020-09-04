@@ -36,6 +36,7 @@
   },
   "files": [
     "<%= database_path %>",
-    "<%= srv_dir %>"
+    "<%= srv_dir %>",
+    "CF_CREDS.txt"
   ]
 }
