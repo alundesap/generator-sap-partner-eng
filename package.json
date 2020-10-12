@@ -1,6 +1,6 @@
 {
   "name": "generator-sap-partner-eng",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Project/Module Generator for SAP Partner Engineering Guided Projects",
   "homepage": "https://github.com/andrewlunde/generator-sap-partner-eng",
   "author": {
@@ -36,6 +36,10 @@
     "cloud-application-programming",
     "hana"
   ],
+  "generator-filter": {
+    "categories": ["sap.cap"],
+    "types": ["tool", "project", "partner-eng"]
+  },
   "devDependencies": {
     "yeoman-test": "^1.7.0",
     "yeoman-assert": "^3.1.0",
